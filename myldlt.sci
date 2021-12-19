@@ -14,7 +14,7 @@
 endfunction
 
 function [] = test_myldlt()
-    n = [4,10,25,50,100,500,1000, 2000]
+    n = [4,10,25,50,100,500,1000]
     
     for i=1:size(n)(2)
         A = rand(n(i), n(i))
