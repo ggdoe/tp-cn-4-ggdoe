@@ -1,0 +1,131 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{minted, caption}
+\usemintedstyle{borland}
+\title{Rapport de TP}
+\author{Grégoire DOEBELE }
+\date{December 2021}
+
+\begin{document}
+
+\maketitle
+
+\section{Décomposition LDLt}
+
+D'après le cours, on sait que la décomposition \(LDL^t\) existe et est unique pour toute matrice symétrique.
+
+Soit \(A\) symétrique
+\[
+	A = A^t = 
+	\begin{pmatrix}
+	a_{1,1}	& \dots	& a_{1,n} 	\\
+	\vdots	& \ddots& \vdots	\\
+	a_{1,n}	& \dots & a_{n,n} 	\\
+	\end{pmatrix}
+\]
+
+\(A\) peut s'écrire sous la forme \(LU\) ou \(LDL^t\), avec \(L\) \textit{unit lower triangular}, U \textit{upper triangular} et D diagonale.
+En identifiant les termes on trouve que \(U = DL^t\), et les \(L\) sont les même.
+
+\[
+	D = 
+	\begin{pmatrix}
+	&d_1	& 		& 0&	\\
+	&		& \ddots& &		\\
+	& 0	& 		& d_n & 	\\
+	\end{pmatrix}
+\]
+\[	
+	L^t = 
+	\begin{pmatrix}
+	1		& 	& 	&  	\\
+	l_{2,1}	& \ddots&0& 	\\
+	\vdots	& \ddots & \ddots&  \\
+	l_{n,1}	& \dots  & l_{n,n-1} & 1 	\\
+	\end{pmatrix}, 
+	L^t = 
+	\begin{pmatrix}
+	1		& l_{2,1}& \dots	& l_{n,1} 	\\
+			& \ddots&\ddots& \vdots	\\
+			& 0 & \ddots& l_{n,n-1} \\
+			&  && 1 	\\
+	\end{pmatrix}
+\]
+
+On obtient donc U simplement en multipliant chaque ligne \(i\) de \(L^t\) par \(d_i\),
+\[
+	U = DL^t = 
+	\begin{pmatrix}
+	d_1		& d_1 l_{2,1}& \dots	& d_1 l_{n,1} 	\\
+			& \ddots&\ddots& \vdots	\\
+			& 0 & \ddots& d_{n-1} l_{n,n-1} \\
+			&  && d_n 	\\
+	\end{pmatrix}
+\]
+
+
+\textcolor{red}{TODO: à finir ??}
+
+Pour tester notre algorithme on a besoin de matrice symétrique, on peut en générer avec
+\texttt{A = rand(n,n) ; A = A * A'}
+Ainsi \(A\) vérifie bien \(A = A^t\)
+\newline\indent
+
+On teste notre algorithme avec la fonction \texttt{myldlt.sci: test\_myldlt()}
+
+\begin{table}[H]
+\caption{Tests \(LDL^t\)} \label{tab:title} 
+\begin{center}
+\begin{tabular}{|l|c|c|}
+  \hline
+  n & conditonnement & erreur avant relative \\
+  \hline
+	4	& \(2.38 \times 10^3\)	& \(2.36 \times 10^{-17}\) \\
+	10	& \(9.44 \times 10^5\)	& \(4.27 \times 10^{-17}\) \\
+	25	& \(6.93 \times 10^5\)	& \(3.50 \times 10^{-17}\) \\
+	50	& \(1.59 \times 10^5\)	& \(2.19 \times 10^{-17}\) \\
+	100	& \(2.91 \times 10^7\)	& \(2.39 \times 10^{-17}\) \\
+	500	& \(2.44 \times 10^9\)	& \(2.01 \times 10^{-17}\) \\
+	999	& \(3.53 \times 10^9\)	& \(1.88 \times 10^{-17}\) \\
+  \hline
+\end{tabular}
+\end{center}
+\caption*{\textit{Le conditionnement et l'erreur sont pris avec la 2-norm}}
+\end{table}
+
+
+L'erreur est très faible même pour de relativement grande valeur de \texttt{n}, notre algorithme \(LDL^t\) à une bonne précision.\newline\indent
+
+On souhaite calculer la complexité de notre algorithme \(LDL^t\).\newline
+Lors du calcule on écrit directement dans la matrice d'entré, on créé aussi un vecteur de taille n, la complexité en mémoire de notre algorithme est donc de \(n^2+n\)\newline
+La boucle principale va de \texttt{j = 1:n}, à l'intérieur on a une boucle de \texttt{i = 1:j-1} qui fait \texttt{2 Read}, \texttt{1 Write}, \texttt{1}\(\times\), soit un nombre d'opération de l'ordre de \texttt{(j-1)}.\newline
+Il y a aussi un produit scalaire entre deux vecteur de taille \texttt{(j-1)} qui donne aussi un nombre d'opération de l'ordre de \texttt{(j-1)}. \newline
+Et enfin il y a un produit entre une matrice \texttt{(n-j)}\(\times\)\texttt{(j-1)} et un vecteur \texttt{(j-1)} soit un nombre d'opération de l'ordre de \texttt{(n-j)(j-1)}.\newline
+En sommant entre \texttt{1} et \texttt{n}, on trouve la complexité de l'algorithme en temps,
+\[
+\sum_{j=1}^n (n+2)(j-1) - j(j-1) = O(n^3/6)
+\]
+
+
+\textcolor{red}{TODO: vérifier que la complexité en temps est bonne}
+
+
+
+\begin{minted}{scilab}
+function [] = test_myldlt()
+    n = [4,10,25,50,100,500,999]
+    
+    for i=1:size(n)(2)
+        A = rand(n(i), n(i))
+        A = A*A'
+        [L,D] = myldlt(A)
+        err = norm(L*D*L' - A)/norm(A)
+        printf("n : %ld\t", n(i))
+        printf("conditionnement : %.2le\t", cond(A))
+        printf("erreur : %.2le\n", err)
+     end
+endfunction
+\end{minted}
+
+\end{document}
