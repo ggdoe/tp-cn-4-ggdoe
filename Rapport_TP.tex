@@ -3,12 +3,16 @@
 \usepackage[french]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
+\usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{minted, caption}
 \usepackage{tikz}
+
+\graphicspath{ {./images/} }
 \usetikzlibrary{calc}
 \usemintedstyle{borland}
 \captionsetup[table]{name=Tableau}
+
 \title{Rapport de TP}
 \author{Grégoire DOEBELE }
 \date{December 2021}
@@ -35,6 +39,7 @@
 
 \section{Décomposition LDLt}
 
+Rappel,\newline
 D'après le cours, on sait que la décomposition \(LDL^t\) existe et est unique pour toute matrice symétrique.
 
 Soit \(A\) symétrique
@@ -74,7 +79,6 @@ En identifiant les termes on trouve que \(U = DL^t\), et les \(L\) sont les mêm
 			&  && 1 	\\
 	\end{pmatrix}
 \]
-
 On obtient donc U simplement en multipliant chaque ligne \(i\) de \(L^t\) par \(d_i\),
 \[
 	U = DL^t = 
@@ -85,7 +89,6 @@ On obtient donc U simplement en multipliant chaque ligne \(i\) de \(L^t\) par \(
 			&  && d_n 	\\
 	\end{pmatrix}
 \]
-
 \[	
 	A = LDL^t = 
 	\begin{pmatrix}
@@ -101,9 +104,7 @@ On obtient donc U simplement en multipliant chaque ligne \(i\) de \(L^t\) par \(
 			&  && d_n 	\\
 	\end{pmatrix}
 \]
-
-Chaque élément \(a_{i,j}\) peut être obtenu en faisant le produit scalaire d'une ligne de L par une colonne de U. Ces matrices étant triangulaire, on peut obtenir le vecteur \texttt{a(j:n,j)} simplement en étant le vecteur \texttt{l(j,1:j)} en la sous matrice \texttt{l(j:n,1:j)}, comme ci dessous :
-
+Chaque élément \(a_{i,j}\) peut être obtenu en faisant le produit scalaire d'une ligne de L par une colonne de U. Ces matrices étant triangulaire, on peut obtenir le vecteur \texttt{a(j:n,j)} simplement en étendant le vecteur \texttt{l(j,1:j)} en la sous matrice \texttt{l(j:n,1:j)}, comme ci dessous :
 \[
 	A = 
 	\begin{pmatrix}
@@ -141,8 +142,7 @@ Chaque élément \(a_{i,j}\) peut être obtenu en faisant le produit scalaire d'
 
 \textcolor{red}{TODO: à finir ??}
 
-Pour tester notre algorithme on a besoin de matrices symétriques, on peut en générer avec
-\texttt{A = rand(n,n) ; A = A * A'}
+Pour tester notre algorithme on a besoin de matrices symétriques, on peut en générer avec \texttt{A = rand(n,n) ; A = A' * A}.
 Ainsi \(A\) vérifie bien \(A = A^t\)
 \newline\indent
 
@@ -151,10 +151,10 @@ On teste notre algorithme avec la fonction \texttt{myldlt.sci: test\_myldlt()}
 \begin{table}[H]
 \renewcommand*\arraystretch{1.3}
 \begin{center}
-\caption{Tests \(LDL^t\)} \label{tab:title} 
+\caption{Tests \(LDL^t\)}
 \begin{tabular}{|l|c|c|}
   \hline
-  n & conditonnement & erreur avant relative \\
+  n & conditionnement & erreur avant relative \\
   \hline
 	4	& \(2.38 \times 10^3\)	& \(2.36 \times 10^{-17}\) \\
 	10	& \(9.44 \times 10^5\)	& \(4.27 \times 10^{-17}\) \\
@@ -170,22 +170,86 @@ On teste notre algorithme avec la fonction \texttt{myldlt.sci: test\_myldlt()}
 \end{table}
 
 
-L'erreur est très faible même pour de relativement grande valeur de \texttt{n}, notre algorithme \(LDL^t\) à une bonne précision.\newline\indent
+L'erreur est très faible même pour de grande valeur de \texttt{n} ou un grand conditionnement de \(A\), notre algorithme \(LDL^t\) a une bonne précision.\newline\indent
 
 On souhaite calculer la complexité de notre algorithme \(LDL^t\).\newline
 Lors du calcule on écrit directement dans la matrice d'entré, on créé aussi un vecteur de taille n, la complexité en mémoire de notre algorithme est donc de \(n^2+n = \mathcal{O}(n^2)\).\newline
 La boucle principale va de \texttt{j = 1:n}, à l'intérieur on a une boucle de \texttt{i = 1:j-1} (qui fait \texttt{2 Read}, \texttt{1 Write}, \texttt{1}\(\times\)), soit un nombre d'opération de l'ordre de \texttt{(j-1)}.\newline
 Puis y a un produit scalaire entre deux vecteur de taille \texttt{(j-1)} qui donne aussi un nombre d'opération de l'ordre de \texttt{(j-1)}. \newline
 Et enfin il y a un produit entre une matrice \texttt{(n-j)}\(\times\)\texttt{(j-1)} et un vecteur \texttt{(j-1)} soit un nombre d'opération de l'ordre de \texttt{(n-j)(j-1)}.\newline
-En sommant entre \texttt{1} et \texttt{n}, on trouve la complexité de l'algorithme en temps,
+En sommant entre \texttt{1} et \texttt{n}, on trouve la complexité en temps de l'algorithme,
 \[
-\sum_{j=1}^n (n-j+2)(j-1) = \mathcal{O}(\frac{n^3}{6})
+\sum_{j=1}^n (n-j+2)(j-1) = \mathcal{O}(\frac{n^3}{6}) = \mathcal{O}(n^3)
 \]
 
+\textcolor{red}{TODO: préciser la complexité ?}\newline\indent
+On teste la complexité en temps notre algorithme avec la fonction \texttt{myldlt.sci: time\_myldlt()}.
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand*\arraystretch{1.3}
+\caption{Complexité en temps \(LDL^t\)}
+\begin{tabular}{|l|c|c|r|}
+  \hline
+  n (nbr répétition) & conditionnement & erreur & temps d'exécution (s)\\
+  \hline
+	10 (10000)	& \(7.30 \times 10^{7}  \)	& \(3.67 \times 10^{-17} \pm 10^{-18}	\)	& \(6.78 \times 10^{-4} \pm3.05 \times 10^{-4}\) \\
+	50 (3000)	& \(2.66 \times 10^{8}  \)	& \(2.58 \times 10^{-17} \pm 10^{-18}	\)	& \(8.86 \times 10^{-3} \pm1.13 \times 10^{-3}\) \\
+	100 (1000)	& \(2.97 \times 10^{10} \)& \(2.36 \times 10^{-17} \pm 10^{-18}	\)	& \(3.28 \times 10^{-2} \pm2.82 \times 10^{-3}\) \\
+	200 (100)	& \(2.25 \times 10^{9}  \)	& \(2.23 \times 10^{-17} \pm 10^{-18}	\)	& \(1.31 \times 10^{-1} \pm5.30 \times 10^{-3}\) \\
+	400 (25)	& \(8.68 \times 10^{9}  \)	& \(2.16 \times 10^{-17} \pm 10^{-19}	\)	& \(6.03 \times 10^{-1} \pm6.13 \times 10^{-2}\) \\
+	500 (15)	& \(4.47 \times 10^{9}  \)	& \(1.97 \times 10^{-17} \pm 10^{-19}	\)	& \(9.97 \times 10^{-1} \pm2.62 \times 10^{-2}\) \\
+	800 (5)		& \(6.25 \times 10^{10} \)	& \(2.16 \times 10^{-17} \pm 10^{-19}	\)	& \(3.23 \pm3.39 \times 10^{-2}\) \\
+	1000 (5)	& \(1.85 \times 10^{10} \)	& \(1.90 \times 10^{-17} \pm 10^{-19}	\)	& \(6.18 \pm8.89 \times 10^{-1}\) \\
+  \hline
+\end{tabular}
+\caption*{\textit{On utilise les fonctions }\texttt{mean}\textit{ et }\texttt{stdev} \textit{pour calculer la moyenne et l'écart-type de l'erreur et du temps d'exécution.}}
+\end{table}
 
-\textcolor{red}{TODO: vérifier que la complexité en temps est bonne}
+On trace la variation du temps d'exécution avec la fonction \texttt{myldlt.sci: plot\_time\_myldlt()}.
+
+\begin{figure}[H]
+\caption{Temps d'exécution \(LDL^t\)}
+\centering
+\includegraphics[scale=0.80]{time_LDLt}
+\end{figure}
+Dans un graphique \(\log\log\), les fonctions \(x^k\) apparaissent comme des droites de pente \(k\). Ici la courbe de la moyenne à une pente d'environ \(2\), ce qui est significativement moins que la valeur théorique \(\mathcal{O}(n^3)\). C'est très certainement dû aux optimisations de \texttt{BLAS/LAPACK}, cependant on remarque que la courbe n'est pas tous à fait linéaire, vers les grandes valeur de \(n\) la pente devient supérieur à \(2\).
+
+On compare \(LDL^t\) et \(LU\) (sans pivot partiel) avec la fonction \texttt{myldlt.sci: comp\_mylu\_myldlt()}
+
+\begin{table}[H]
+\centering
+\renewcommand*\arraystretch{1.3}
+\caption{Comparaison \(LDL^t\ -\ LU\)}
+\begin{tabular}{|l|c|c|c|}
+  \hline
+  n & erreur & temps exécution \(LDL^t\) (s) & temps exécution \(LU\) (s) \\
+  \hline
+	5	&	\(5.81 \times 10^{-16}\)	&	\(2.69 \times 10^{-4}\)	&	\(1.83 \times 10^{-4}\) \\
+	10	&	\(2.18 \times 10^{-15}\)	&	\(6.58 \times 10^{-4}\)	&	\(3.21 \times 10^{-4}\) \\
+	25	&	\(1.21 \times 10^{-14}\)	&	\(2.47 \times 10^{-3}\)	&	\(9.59 \times 10^{-4}\) \\
+	50	&	\(3.64 \times 10^{-14}\)	&	\(8.24 \times 10^{-3}\)	&	\(2.75 \times 10^{-3}\) \\
+	100	&	\(1.39 \times 10^{-13}\)	&	\(3.04 \times 10^{-2}\)	&	\(1.23 \times 10^{-2}\) \\
+	200	&	\(5.66 \times 10^{-13}\)	&	\(1.27 \times 10^{-1}\)	&	\(7.22 \times 10^{-2}\) \\
+	300	&	\(1.62 \times 10^{-12}\)	&	\(2.99 \times 10^{-1}\)	&	\(2.19 \times 10^{-1}\) \\
+	500	&	\(3.98 \times 10^{-12}\)	&	\(9.47 \times 10^{-1}\)	&	\(1.21\) \\
+	750	&	\(8.12 \times 10^{-12}\)	&	\(2.69\)				&	\(4.88\) \\
+	1000 &	\(1.54 \times 10^{-11}\)	&	\(6.61\) 				&	\(12.8\) \\
+  \hline
+\end{tabular}
+\caption*{\textit{L'erreur est la 2-norme de la différence entre \(LDL^t\) et \(LU\)}}
+\end{table}
+
+On remarque que sur de petite matrice \(LU\) est plus rapide, mais que sur de grande matrice c'est \(LDL^t\) qui est plus rapide. L'algorithme \(LU\) a une complexité du même ordre que \(LDL^t\) mais il fait un peu plus de calculs dans la boucle principale :  \begin{minted}{scilab}
+// boucle principale LU
+A(k+1:n, k+1:n) = A(k+1:n,k+1:n) - A(k+1:n,k) * A(k,k+1:n)
+// boucle principale LDLt
+A(j+1:n,j) = (A(j+1:n,j) - A(j+1:n,1:j-1) * v(1:j-1))/A(j,j)
+\end{minted}
+On peut expliquer que notre algorithme \(LU\) est plus rapide sur de petites valeurs de \(n\) par sa compacité. Il n'y a qu'une boucle et on utilise presque exclusivement les opérations vectorielles de \texttt{scilab}, le code est fortement optimisé, mais ça ne suffit pas pour battre \(LDL^t\) sur de grandes matrices.
 
 
+\textcolor{red}{TODO: CSR}
 
 \begin{minted}{scilab}
 function [] = test_myldlt()
@@ -202,5 +266,6 @@ function [] = test_myldlt()
      end
 endfunction
 \end{minted}
+
 
 \end{document}
