@@ -1,12 +1,12 @@
 function [v] = csr_mv(AA, JA, IA, x)
     n = length(JA)
     v = zeros(length(IA)-1,1)
-    k = IA(1)+1 // +1 évite un tour de while
+    k = 1
     for i=1:n
-        while(i == IA(k)) // saute les lignes nulles
+        while(i == IA(k+1)) // saute les lignes nulles
             k = k + 1
         end
-        v(k-1) = v(k-1) + AA(i) * x(JA(i))
+        v(k) = v(k) + AA(i) * x(JA(i))
     end
     if(isrow(x)) // col/row coherente avec x
         v = v'
@@ -55,13 +55,21 @@ function [A] = undo_csr(AA, JA, IA, m)
     end
 endfunction
 
-function [] = mytest_csr(n,m,p)
+function [] = test_csr(n,m,p)
     A = make_mat_creuse(n,m,p)
-    disp(A)
+    //disp(A)
     [AA, JA, IA] = make_csr(A)
     B = undo_csr(AA, JA, IA, m)
-    disp(B)
+    //disp(B)
     disp(norm(B-A))
+endfunction
+
+function [] = test_csr_mv(n,m,p)
+    x = make_mat_creuse(m,1,p)
+    A = make_mat_creuse(n,m,p)
+    [AA, JA, IA] = make_csr(A)
+    y = csr_mv(AA, JA, IA, x)
+    disp(norm(y - A*x))
 endfunction
 
 /*
