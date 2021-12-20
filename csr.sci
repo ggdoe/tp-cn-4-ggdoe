@@ -15,14 +15,13 @@ endfunction
 
 function [A] = make_mat_creuse(n, m, seuil_rand)
     A = zeros(n,m)
-    for i = 1:n
-        for j = 1:m
-            if rand() > seuil_rand then // si rand()> seuil, valeur non nulle 
-                A(i,j) = rand()
-            end
-        end
-    end
-endfunction
+    nbr_zeros = int(n*m*(1-seuil_rand))
+    imax = int(nbr_zeros/m)
+    jmax = modulo(nbr_zeros,m)
+    A(1:imax,:) = rand(imax,m) // bloc random
+    A(imax+1,1:jmax) = rand(1,jmax) // on complete ce qu'il manque
+    A = grand(1, "prm", A) // random permutation
+endfunction // bien plus rapide que old_make_mat_creuse()
 
 function [AA, JA, IA] = make_csr(A)
     cpt = 1
@@ -72,6 +71,18 @@ function [] = test_csr_mv(n,m)
 endfunction
 
 function [] = time_csr(n,m)
+endfunction
+
+
+function [A] = old_make_mat_creuse(n, m, seuil_rand)
+    A = zeros(n,m)
+    for i = 1:n
+        for j = 1:m
+            if rand() > seuil_rand then // si rand()> seuil, valeur non nulle 
+                A(i,j) = rand()
+            end
+        end
+    end
 endfunction
 
 /*
