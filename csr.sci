@@ -14,13 +14,11 @@ function [v] = csr_mv(AA, JA, IA, x)
 endfunction
 
 function [A] = make_mat_creuse(n, m, seuil_rand)
-    A = rand(n,m)
+    A = zeros(n,m)
     for i = 1:n
         for j = 1:m
-            if A(i,j) < seuil_rand then
-                A(i,j) = 0 // on supprime les valeurs < seuil
-            else // on replace les autres valeurs entre [0,1]
-                A(i,j) = (A(i,j) - seuil_rand)/(1-seuil_rand)
+            if rand() > seuil_rand then // si rand()> seuil, valeur non nulle 
+                A(i,j) = rand()
             end
         end
     end
@@ -64,12 +62,16 @@ function [] = test_csr(n,m,p)
     disp(norm(B-A))
 endfunction
 
-function [] = test_csr_mv(n,m,p)
+function [] = test_csr_mv(n,m)
+    p = rand()
     x = make_mat_creuse(m,1,p)
     A = make_mat_creuse(n,m,p)
     [AA, JA, IA] = make_csr(A)
     y = csr_mv(AA, JA, IA, x)
     disp(norm(y - A*x))
+endfunction
+
+function [] = time_csr(n,m)
 endfunction
 
 /*
