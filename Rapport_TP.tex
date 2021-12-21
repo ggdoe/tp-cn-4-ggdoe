@@ -104,7 +104,7 @@ On obtient donc U simplement en multipliant chaque ligne \(i\) de \(L^t\) par \(
 			&  && d_n 	\\
 	\end{pmatrix}
 \]
-Chaque élément \(a_{i,j}\) peut être obtenu en faisant le produit scalaire d'une ligne de L par une colonne de U. Ces matrices étant triangulaire, on peut obtenir le vecteur \texttt{a(j:n,j)} simplement en étendant le vecteur \texttt{l(j,1:j)} en la sous matrice \texttt{l(j:n,1:j)}, comme ci dessous :
+Chaque élément \(a_{i,j}\) peut être obtenu en faisant le produit scalaire d'une ligne de L par une colonne de U. Ces matrices étant triangulaire, on peut obtenir le vecteur \texttt{A(j:n,j)} simplement en étendant le vecteur \texttt{L(j,1:j)} en la sous matrice \texttt{L(j:n,1:j)}, comme ci dessous :
 \[
 	A = 
 	\begin{pmatrix}
@@ -138,7 +138,20 @@ Chaque élément \(a_{i,j}\) peut être obtenu en faisant le produit scalaire d'
 	\DrawBox[thick, red ]{left}{right}{}
 \]
 
-
+On cherche à obtenir $d_j$, en prenant le produit de la j\ieme\ ligne et de la j\ieme\  colonne, on obtient une expression de $a_{j,j}$ :
+\texttt{A[j,j] = L[j, 1:j]$\times$(DL$^t$)[1:j,j]}, on note \texttt{v[1:j]} le vecteur \texttt{(DL$^t$)[1:j,j]}.
+\[
+a_{j,j} = d_j + \sum_{k=1}^{j-1} d_k l^2_{j,k}
+\]
+Et donc en isolant $d_j$, on obtient l'expression souhaité.
+\[
+d_j = a_{j,j} - \sum_{k=1}^{j-1} d_k l^2_{j,k}
+\]
+Pour trouvé les valeurs de \(L\), on utilise la même méthode avec les lignes d'en dessous : \texttt{A[j+1:n,j] = L[j+1:n,1:j]$\times$v[1:j]}, on développe puis on isole le vecteur souhaité \texttt{L[j+1:n,j]},
+\[\texttt{A[j+1:n,j] = d$_j$L(j+1:n,j) + L[j+1:n,1:j-1]$\times$v[1:j-1]}\]
+\[\texttt{d$_j$L(j+1:n,j) = A[j+1:n,j] - L[j+1:n,1:j-1]$\times$v[1:j-1]}\]
+\[\texttt{L(j+1:n,j) = $\frac{1}{\texttt{d}_j}$(A[j+1:n,j] - L[j+1:n,1:j-1]$\times$v[1:j-1])}\]
+Il suffit de calculer pour chaque colonne $d_j$ puis \texttt{L(j+1:n,j)}, les $d_j$ formes la matrice diagonale D, il ne reste plus qu'a fixé la diagonale de L à 1.
 
 \textcolor{red}{TODO: à finir ??}
 
@@ -313,25 +326,26 @@ endfunction
 \end{minted}
 \end{scriptsize}
 
-Pour tester cet algorithme, on a besoin de pouvoir générer des matrices creuses, et trouver leur forme CSR.
+Pour tester cet algorithme, on a besoin de pouvoir générer des matrices creuses, et calculer leur forme CSR.
 
 Un moyen efficace pour généré des matrices creuse est de remplir une matrice vide de quelques valeurs aléatoires, puis de permuter aléatoirement ses éléments. Pour cela on utilise la fonction \texttt{grand(1, "prm", A)} de \texttt{scilab}, le \texttt{"prm"} signifie qu'on souhaite une permutation, le 1 signifie que l'on en veut qu'une seule, et \texttt{A} est la matrice à permuter. Voir l'implémentation dans \texttt{csr.sci: make\_mat\_creuse(..)}
 \newline\indent
 
-L'algorithme pour trouver le format CSR est aussi très simple. On parcours \(A\) avec deux boucle fort (selon les lignes), on note les valeurs non nulle dans \texttt{AA}, les colonnes dans \texttt{JA}, et lorsqu'on change de ligne on mets d'indice dans \texttt{IA}. Cependant étant donné qu'on doit parcourir toutes les cases de \(A\), cet algorithme est en \(\mathcal{O}(n^2)\), c'est l'algorithme le plus lents de \texttt{csr.sci}. Voir l'implémentation dans \texttt{csr.sci: make\_csr(A)}.
+L'algorithme pour calculer le format CSR est aussi très simple. On parcours \(A\) avec deux boucle fort (selon les lignes), on note les valeurs non nulle dans \texttt{AA}, les colonnes dans \texttt{JA}, et lorsqu'on change de ligne on mets d'indice dans \texttt{IA}. Cependant étant donné qu'on doit parcourir toutes les cases de \(A\), cet algorithme est en \(\mathcal{O}(n^2)\). Voir l'implémentation dans \texttt{csr.sci: make\_csr(A)}.
 
 On peut tester cet algorithme en faisant et défaisant la forme CSR (avec la fonction \texttt{csr.sci: undo\_csr(..)}), puis en prenant la 2-norme de la matrice initiale moins celle qui a été fait puis défait. On trouve que ces matrices sont toujours identique quelque soit la taille de la matrices initiale. Voir l'implémentation dans \texttt{csr.sci: test\_csr()}
 \newline\indent
 
-On peut maintenant tester la multiplication matrice creuse vecteur efficacement. On génère d'abord une matrice creuse \texttt{n}\(\times\)\texttt{m} avec la fonction \texttt{make\_mat\_creuse}, on génère aussi un vecteur creux \texttt{m}\(\times\)\texttt{1} avec la même fonction. On converti cette matrice en CSR avec \texttt{make\_csr}, puis on récupère le vecteur sortie de \texttt{csr\_mv} que l'on compare avec \(Ax\) (en prenant la 2-norme de la différence). Voir l'implémentation dans \texttt{csr.sci: test\_csr\_mv()}
+On peut maintenant tester la multiplication matrice creuse vecteur. On génère d'abord une matrice creuse \texttt{n}\(\times\)\texttt{m} avec la fonction \texttt{make\_mat\_creuse}, on génère aussi un vecteur creux \texttt{m}\(\times\)\texttt{1} avec la même fonction. On converti cette matrice en CSR avec \texttt{make\_csr}, puis on récupère le vecteur sortie de \texttt{csr\_mv} que l'on compare avec \(Ax\) (en prenant la 2-norme de la différence). Voir l'implémentation dans \texttt{csr.sci: test\_csr\_mv()}
 
-Même pour des matrices très grande (\(\approx5000\times2000\)), la différence entre les solutions est toujours nulle. L'algorithme \texttt{csr\_mv} donne donc un résultat correct.
+Même pour des matrices très grande (\(5000\times3000\)), la différence entre les solutions est toujours nulle. L'algorithme \texttt{csr\_mv} donne donc un résultat correct.
 
-On peut comparer les performances de \texttt{csr\_mv} avec \texttt{Ax}. Pour de grandes matrices, la majorité du temps est perdu en cherchant la forme CSR avec la fonction \texttt{make\_csr} (qui est en \(\mathcal{O}(n^2)\)). 
+On peut comparer les performances de \texttt{csr\_mv} avec \texttt{Ax}. Pour de grandes matrices, la majorité du temps est perdu en calculant le format CSR avec la fonction \texttt{make\_csr} (qui est en \(\mathcal{O}(n^2)\)). 
 
 \begin{table}[H]
 \centering
-\caption{Comparaison \texttt{csr\_mv} \(Ax\)}
+\caption{Comparaison \texttt{csr\_mv - Ax}}
+\renewcommand*\arraystretch{1.3}
 \begin{tabular}{|l|c|c|c|}
   \hline
   n\(\times\)m & temps exécution \texttt{csr\_mv} (s) & temps exécution \(Ax\) (s) \\
@@ -352,7 +366,7 @@ On remarque que le produit matrice vecteur natif de \texttt{scilab} est dans tou
 
 \section{Poisson 1D}
 
-
+\textcolor{red}{TODO: Raconter vite fais le cours/td}
 \textcolor{red}{TODO: C}
 
 \begin{minted}{scilab}
