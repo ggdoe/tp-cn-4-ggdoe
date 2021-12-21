@@ -1,7 +1,7 @@
 function [v] = csr_mv(AA, JA, IA, x)
     n = length(JA)
     v = zeros(length(IA)-1,1)
-    k = 1
+    k = 1 // ligne actuelle
     for i=1:n
         while(i == IA(k+1)) // saute les lignes nulles
             k = k + 1
@@ -13,14 +13,14 @@ function [v] = csr_mv(AA, JA, IA, x)
     end
 endfunction
 
-function [A] = make_mat_creuse(n, m, seuil_rand)
+function [A] = make_mat_creuse(n, m, pourcentage_creux)
     A = zeros(n,m)
-    nbr_zeros = int(n*m*(1-seuil_rand))
+    nbr_zeros = int(n*m*(1-pourcentage_creux))
     imax = int(nbr_zeros/m)
     jmax = modulo(nbr_zeros,m)
     A(1:imax,:) = rand(imax,m) // bloc random
     A(imax+1,1:jmax) = rand(1,jmax) // on complete ce qu'il manque
-    A = grand(1, "prm", A) // random permutation
+    A = grand(1, "prm", A) // random permutation de la matrice
 endfunction // bien plus rapide que old_make_mat_creuse()
 
 function [AA, JA, IA] = make_csr(A)
@@ -44,9 +44,9 @@ function [A] = undo_csr(AA, JA, IA, m)
     k = 1
     for i = 1:size(AA)(2)
         if k < size(IA)(2) then
-        while(i == IA(k+1)) // saute les lignes nulles
-            k = k + 1 
-        end
+            while(i == IA(k+1)) // saute les lignes nulles
+                k = k + 1 
+            end
         end
         A(k, JA(i)) = AA(i)
     end
@@ -62,23 +62,40 @@ function [] = test_csr(n,m,p)
 endfunction
 
 function [] = test_csr_mv(n,m)
-    p = rand()
-    x = make_mat_creuse(m,1,p)
-    A = make_mat_creuse(n,m,p)
+    x = make_mat_creuse(m,1,rand())
+    A = make_mat_creuse(n,m,rand())
     [AA, JA, IA] = make_csr(A)
     y = csr_mv(AA, JA, IA, x)
     disp(norm(y - A*x))
 endfunction
 
-function [] = time_csr(n,m)
+function [] = time_csr(n,m,rep)
+    timer_csr = zeros(rep,1)
+    timer_sci = zeros(rep,1)
+    for i=1:rep
+        p1 = 0.05 + 0.90 * rand(); p2 = 0.05 + 0.90 * rand();
+        //printf("%lf ; %lf\n", p1, p2)
+        x = make_mat_creuse(m,1,p1)
+        A = make_mat_creuse(n,m,p2)
+        [AA, JA, IA] = make_csr(A)
+        tic()
+        y1 = csr_mv(AA, JA, IA, x)
+        timer_csr(i) = toc()
+        tic()
+        y2 = A*x
+        timer_sci(i) = toc()
+        if y2 ~=y1 then
+            disp("CSR != native")
+        end
+    end
+    printf("\\(%ld \\times %ld\\)\t&\t%.2le\t&\t%.2le\n", n, m, min(timer_csr), min(timer_sci))
 endfunction
-
 
 function [A] = old_make_mat_creuse(n, m, seuil_rand)
     A = zeros(n,m)
     for i = 1:n
         for j = 1:m
-            if rand() > seuil_rand then // si rand()> seuil, valeur non nulle 
+            if rand() > seuil_rand then
                 A(i,j) = rand()
             end
         end
