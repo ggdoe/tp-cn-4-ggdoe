@@ -37,7 +37,7 @@
 
 \maketitle
 
-\section{Décomposition LDLt}
+\section{Décomposition LDL\(^t\)}
 
 Rappel,\newline
 D'après le cours, on sait que la décomposition \(LDL^t\) existe et est unique pour toute matrice symétrique.
@@ -248,23 +248,115 @@ A(j+1:n,j) = (A(j+1:n,j) - A(j+1:n,1:j-1) * v(1:j-1))/A(j,j)
 \end{minted}
 On peut expliquer que notre algorithme \(LU\) est plus rapide sur de petites valeurs de \(n\) par sa compacité. Il n'y a qu'une boucle et on utilise presque exclusivement les opérations vectorielles de \texttt{scilab}, le code est fortement optimisé, mais ça ne suffit pas pour battre \(LDL^t\) sur de grandes matrices.
 
+\section{CSR}
 
-\textcolor{red}{TODO: CSR}
+Pour implémenter un algorithme de multiplication d'une matrice creuse au format CSR, on regarde comment se présente une matrice CSR.
+
+Soit \(A\) une matrice creuse, tel que :
+\[
+A = 
+\begin{pmatrix}
+	0	&	0	&	0	&	0	& 0	\\
+	0	&	9	&	13	&	0	& 0	\\
+	0	&	0	&	0	&	11	& 0	\\
+	12	&	0	&	0	&	0	& 0	\\
+	0	&	0	&	0	&	0	& 9	\\
+	0	&	3	&	0	&	0	& 0	\\
+	5	&	0	&	0	&	0	& 0	\\
+\end{pmatrix}
+\]
+
+Au format CSR, elle se présente sous cette forme :
+\[
+\texttt{AA}  = 
+\begin{bmatrix}
+9	&	13	&	11	&	12	&	9	&	3	&	5	\\
+\end{bmatrix}
+\]
+\[
+\texttt{JA}  = 
+\begin{bmatrix}
+2	&	3	&	4	&	1	&	5	&	2	&	1	\\
+\end{bmatrix}
+\]
+\[
+\texttt{IA}  = 
+\begin{bmatrix}
+1	&	1	&	3	&	4	&	5	&	6	&	7	&	8	\\
+\end{bmatrix}
+\]
+
+\texttt{AA} contient les valeurs, \texttt{JA} le numéro de la colonne de la valeur associer, et \texttt{IA} l'index des sauts de lignes (index des éléments \texttt{AA} et \texttt{JA}). \texttt{IA} commence toujours par 1, lorsqu'une ligne est sauté (ligne de 0) l'index est répété dans \texttt{IA}, par exemple ici : la première ligne est sauté, donc après le premier \(1\) obligatoire, on met un second \(1\).
+
+On remarque qu'au format CSR, la taille du vecteur \texttt{IA} est la même que celle du \texttt{nombre de lignes + 1}, le vecteur de sorti du produit \(Ax\) aura donc un nombre d'élément égal à \texttt{length(IA)-1}
+
+Soit \(x\) un vecteur, on souhaite faire le produit matrice vecteur \(Ax\), le vecteur x soit avoir le même nombre d'élément que le nombre de colonne de \(A\).
+La boucle principale de l'algorithme de multiplication CSR doit se faire sûr le nombre d'élément non nul de A, à l'intérieur de celle ci on place une boucle while qui incrémentera l'indicateur de la ligne actuelle tant que \texttt{IA} nous dit de sauter de ligne. Le produit scalaire se fait élément par élément, l'élément \texttt{AA(i)} est positionner à la colonne \texttt{JA(i)} donc on sait par quel élément de \(x\) on doit le multiplier \texttt{x(JA(i))}. La complexité de l'algorithme est en \(\mathcal{O}(\texttt{nombre\ éléments\ non\ nul})\).
+
+\begin{scriptsize}
+\centering
+\begin{minted}{scilab}
+function [v] = csr_mv(AA, JA, IA, x)
+    n = length(JA)
+    v = zeros(length(IA)-1,1)
+    k = 1 // ligne actuelle
+    for i=1:n
+        while(i == IA(k+1)) // saute les lignes nulles
+            k = k + 1
+        end
+        v(k) = v(k) + AA(i) * x(JA(i))
+    end
+    if(isrow(x)) // col/row coherente avec x
+        v = v'
+    end
+endfunction
+\end{minted}
+\end{scriptsize}
+
+Pour tester cet algorithme, on a besoin de pouvoir générer des matrices creuses, et trouver leur forme CSR.
+
+Un moyen efficace pour généré des matrices creuse est de remplir une matrice vide de quelques valeurs aléatoires, puis de permuter aléatoirement ses éléments. Pour cela on utilise la fonction \texttt{grand(1, "prm", A)} de \texttt{scilab}, le \texttt{"prm"} signifie qu'on souhaite une permutation, le 1 signifie que l'on en veut qu'une seule, et \texttt{A} est la matrice à permuter. Voir l'implémentation dans \texttt{csr.sci: make\_mat\_creuse(..)}
+\newline\indent
+
+L'algorithme pour trouver le format CSR est aussi très simple. On parcours \(A\) avec deux boucle fort (selon les lignes), on note les valeurs non nulle dans \texttt{AA}, les colonnes dans \texttt{JA}, et lorsqu'on change de ligne on mets d'indice dans \texttt{IA}. Cependant étant donné qu'on doit parcourir toutes les cases de \(A\), cet algorithme est en \(\mathcal{O}(n^2)\), c'est l'algorithme le plus lents de \texttt{csr.sci}. Voir l'implémentation dans \texttt{csr.sci: make\_csr(A)}.
+
+On peut tester cet algorithme en faisant et défaisant la forme CSR (avec la fonction \texttt{csr.sci: undo\_csr(..)}), puis en prenant la 2-norme de la matrice initiale moins celle qui a été fait puis défait. On trouve que ces matrices sont toujours identique quelque soit la taille de la matrices initiale. Voir l'implémentation dans \texttt{csr.sci: test\_csr()}
+\newline\indent
+
+On peut maintenant tester la multiplication matrice creuse vecteur efficacement. On génère d'abord une matrice creuse \texttt{n}\(\times\)\texttt{m} avec la fonction \texttt{make\_mat\_creuse}, on génère aussi un vecteur creux \texttt{m}\(\times\)\texttt{1} avec la même fonction. On converti cette matrice en CSR avec \texttt{make\_csr}, puis on récupère le vecteur sortie de \texttt{csr\_mv} que l'on compare avec \(Ax\) (en prenant la 2-norme de la différence). Voir l'implémentation dans \texttt{csr.sci: test\_csr\_mv()}
+
+Même pour des matrices très grande (\(\approx5000\times2000\)), la différence entre les solutions est toujours nulle. L'algorithme \texttt{csr\_mv} donne donc un résultat correct.
+
+On peut comparer les performances de \texttt{csr\_mv} avec \texttt{Ax}. Pour de grandes matrices, la majorité du temps est perdu en cherchant la forme CSR avec la fonction \texttt{make\_csr} (qui est en \(\mathcal{O}(n^2)\)). 
+
+\begin{table}[H]
+\centering
+\caption{Comparaison \texttt{csr\_mv} \(Ax\)}
+\begin{tabular}{|l|c|c|c|}
+  \hline
+  n\(\times\)m & temps exécution \texttt{csr\_mv} (s) & temps exécution \(Ax\) (s) \\
+  \hline
+	\(5 \times 5\)		&	\(6.62 \times 10^{-5}\)	&	\(3.80 \times 10^{-6}\)	\\
+	\(25 \times 25\)	&	\(4.63 \times 10^{-4}\)	&	\(4.60 \times 10^{-6}\)	\\
+	\(75 \times 40\)	&	\(1.79 \times 10^{-3}\)	&	\(6.10 \times 10^{-6}\)	\\
+	\(100 \times 100\)	&	\(5.64 \times 10^{-3}\)	&	\(1.06 \times 10^{-5}\)	\\
+	\(500 \times 325\)	&	\(9.88 \times 10^{-2}\)	&	\(1.37 \times 10^{-4}\)	\\
+	\(2500 \times 1200\)&	6.08					&	\(2.14 \times 10^{-3}\)	\\
+	\(5000 \times 3000\)&	29.0					&	\(1.07 \times 10^{-2}\)	\\
+  \hline
+\end{tabular}
+\caption*{\textit{On vérifie systématiquement que les deux vecteurs résultats sont identiques.}}
+\end{table}
+
+On remarque que le produit matrice vecteur natif de \texttt{scilab} est dans tous les cas plus performant, que notre \texttt{csr\_mv}. Notre fonction est interprété par \texttt{scilab} c'est ce qui fait qu'elle est moins performante. Dans un langage compilé comme C, le produit matrice vecteur CSR serait plus rapide que le produit matrice vecteur classique.
+
+\section{Poisson 1D}
+
+
+\textcolor{red}{TODO: C}
 
 \begin{minted}{scilab}
 function [] = test_myldlt()
-    n = [4,10,25,50,100,500,999]
-    
-    for i=1:size(n)(2)
-        A = rand(n(i), n(i))
-        A = A*A'
-        [L,D] = myldlt(A)
-        err = norm(L*D*L' - A)/norm(A)
-        printf("n : %ld\t", n(i))
-        printf("conditionnement : %.2le\t", cond(A))
-        printf("erreur : %.2le\n", err)
-     end
-endfunction
 \end{minted}
 
 
