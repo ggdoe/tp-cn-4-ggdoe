@@ -366,8 +366,124 @@ On remarque que le produit matrice vecteur natif de \texttt{scilab} est dans tou
 
 \section{Poisson 1D}
 
-\textcolor{red}{TODO: Raconter vite fais le cours/td}
-\textcolor{red}{TODO: C}
+\[
+	\left \{
+	\begin{array}{r c l}
+		-k \frac{\partial^2 T}{\partial x^2} & = & g,\quad x \in ]0,1[ \\
+		T(0) & = & T_0 \\
+		T(1) & = & T_1 \\
+	\end{array}
+	\right .
+\]
+\[
+	\left \{
+	\begin{array}{r c l}
+		T(x+h) & = & T(x) + hT'(x) + \frac{h^2}{2} T''(x) + o(h^3)\\
+		T(x-h) & = & T(x) - hT'(x) + \frac{h^2}{2} T''(x) + o(h^3)\\
+	\end{array}
+	\right .
+\]
+\[
+	\begin{array}{r c l}
+		T(x-h)+T(x+h) & = & 2T(x) + h^2 T''(x) + o(h^3)\\
+	\end{array}
+\]
+\[
+	\begin{array}{r c l}
+		T''(x) & = & \frac{T(x-h) - 2T(x) + T(x+h)}{h^2}  + o(h)\\
+	\end{array}
+\]
+On discrétise  en $n+2$ points, 
+\[
+	\begin{array}{r c l}
+	h & = & \frac{x_{max} - x_{min}}{n-1} = \frac{1}{n+1} \\
+	x_i & = & ih \\
+	T(x_i) & = & T_i \\
+	\end{array}
+\]
+\[
+	\begin{array}{r c c c l}
+	T(x_i + h) & = & T(x_{i+1}) & = & T_{i+1} \\
+	T(x_i - h) & = & T(x_{i-1}) & = & T_{i-1} \\
+	\end{array}
+\]
+\[
+	\begin{array}{r c l}
+		T''(x_i) & = & \frac{T_{i-1} - 2T_i + T_{i+1}}{h^2}  + o(h)\\
+	\end{array}
+\]
+\[
+	\begin{array}{r c c c l}
+		-T_{i-1} + 2T_i - T_{i+1} & = & \frac{h^2g(x_i)}{k} & = & \frac{g_i}{k(n+1)^2}\\
+	\end{array}
+\]
+\[
+	u = 
+	\begin{bmatrix}
+		T_1 & T_2 & \cdots & T_{n-1} & T_n \\
+	\end{bmatrix}^t
+\]
+\[
+	A = 
+	\begin{pmatrix}
+	2	& 	-1	&	0	& 0	\\
+	-1	&	2	&\ddots	& 0	\\
+	0	& \ddots&\ddots	&-1	\\
+	0	& 	0	& -1 	& 2	\\
+	\end{pmatrix}
+	\quad u = 
+	\begin{pmatrix}
+		T_1 \\ T_2 \\ \cdots \\ T_{n-1} \\ T_n \\
+	\end{pmatrix}
+\]
+\[
+	f = \frac{1}{k(n+1)^2}
+	\begin{pmatrix}
+		g_1 \\ g_2 \\ \vdots \\ g_{n-1} \\ g_n \\
+	\end{pmatrix}
+\]
+\[
+	\begin{bmatrix}
+		T_0 & 0 & \cdots & 0 & T_1 \\
+	\end{bmatrix}^t
+\]
+\[
+	f = \frac{1}{k(n+1)^2}
+	\begin{pmatrix}
+		g_1 \\ g_2 \\ \vdots \\ g_{n-1} \\ g_n \\
+	\end{pmatrix} 
+	+ \begin{pmatrix}
+		T_0 \\ 0 \\ \vdots \\ 0 \\ T_1 \\
+	\end{pmatrix}
+\]
+\[
+	g = 0 \quad	\Longrightarrow \quad 
+	f = \begin{pmatrix}
+		T_0 \\ 0 \\ \vdots \\ 0 \\ T_1 \\
+	\end{pmatrix}
+\]
+\textcolor{red}{TODO: sol analytique}
+\[
+	-k \frac{\partial^2 T}{\partial x^2} = 0
+\]
+	Implique que $T$ est linéaire en $x$, de plus les conditions aux limites imposent que 
+\[
+	T(x) = T_0 + x(T_1 - T_0)
+\]
+
+Pour trouver notre inconnue $u$, il suffit de résoudre le système \(Au = f\). On a avantage à profiter du fait que $A$ soit une matrice tridiagonale. On pourra mesurer efficacement l'erreur grâce à la solution analytique.
+
+
+
+\footnote{
+\textcolor{red}{TODO: Travail préliminaire et explication du cas test Poisson 1D}\newline
+\textcolor{red}{TODO: Explication du code, de son architecture, des appels aux bibliothèques externes}\newline
+\textcolor{red}{TODO: Explication du format de stockage et illustration des stockages en Row Major et Col Major}\newline
+\textcolor{red}{TODO: Explication et validation des appels à dgbsv}\newline
+\textcolor{red}{TODO: Explication et validation des appels à dgbmv (en priorité ColMajor et mise en place des tests : si ça ne marche pas expliquer le résultat des tests)}\newline
+\textcolor{red}{TODO: Implémentation du LU pour matrice tridiagonal (au format GB en C)}\newline
+\textcolor{red}{TODO: Exercice Jacobi et Richardson avec implémentation Scilab}\newline
+\textcolor{red}{TODO: + finitions}}
 
 \begin{minted}{scilab}
 function [] = test_myldlt()
