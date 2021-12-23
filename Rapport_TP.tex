@@ -497,7 +497,9 @@ void cblas_dcopy(const int N, const double *X, const int incX, double *Y, const 
 \end{scriptsize}
 \texttt{N} est le nombre d'élement du tableau X à copier dans Y, \texttt{incX} (resp. \texttt{incY}) est l'incrément qu'on doit ajouter à l'index pour chaque élément (en partant de 0). Par exemple, si on veut copier les éléments \texttt{X[0]}, \texttt{X[3]}, $\cdots$, \texttt{X[3N]} alors \texttt{incX} est égale à $3$.
 
-La résolution par méthode directe utilise la fonction \texttt{dgbsv} de \texttt{LAPACKE}, cette fonction résout un système de la forme $Ax = b$ d'inconnue $x$ par la factorisation LU\footnote{dgbsv : \href{http://www.netlib.org/lapack/explore-html/d3/d49/group__double_g_bsolve_gafa35ce1d7865b80563bbed6317050ad7.html}{http://www.netlib.org/lapack/explore-html/[...]0ad7.html}}. Avant d'appeler cette fonction plusieurs étape sont nécessaires. On déclare nos vecteurs (\texttt{X}, \texttt{RHS}, \texttt{EX\_SOL}) et on alloue la place à l'aide de \texttt{malloc}, nos trois vecteur comportent \texttt{*la} éléments. On discrétise notre espace \texttt{X} (sur \texttt{*la + 2} points) avec la fonction :
+La résolution par méthode directe utilise la fonction \texttt{dgbsv} de \texttt{LAPACK}, cette fonction résout un système de la forme $Ax = b$ d'inconnue $x$ par factorisation LU (avec \texttt{dgbtrf}) \footnote{dgbsv : \href{http://www.netlib.org/lapack/explore-html/d3/d49/group__double_g_bsolve_gafa35ce1d7865b80563bbed6317050ad7.html}{http://www.netlib.org/lapack/explore-html/[...]0ad7.html}} puis le résout avec \texttt{dgbsv}.
+
+Avant d'appeler cette fonction plusieurs étape sont nécessaires. On déclare nos vecteurs (\texttt{X}, \texttt{RHS}, \texttt{EX\_SOL}) et on alloue la place à l'aide de \texttt{malloc}, nos trois vecteur comportent \texttt{*la} éléments. On discrétise notre espace \texttt{X} (sur \texttt{*la + 2} points) avec la fonction :
 \begin{scriptsize}
 \begin{minted}{c}
 void set_grid_points_1D(double* x, int* la);
@@ -537,7 +539,7 @@ La même page de documentation nous informe que lorsque qu'on effectue une facto
 		-1	& 	-1	&	-1	&	\cdots	&	-1	&	\ast\\
 	\end{pmatrix}
 \]
-D'après la documentation de la \texttt{MKL}\footnote{MKL Matrix Arguments : \href{https://www.smcm.iqfr.csic.es/docs/intel/mkl/mkl_manual/appendices/mkl_appB_MA.htm}{https://www.smcm.iqfr.csic.es/docs/intel/mkl/[...]\_MA.htm}} les éléments \texttt{+} n'ont pas besoin d'être initialiser, et les éléments $\ast$ ne sont pas utiliser par \texttt{dgbmv}. On pourrait donc théoriquement stocker ce qu'on veut à la place des $\ast$, et ces valeurs ne seront pas affectées par \texttt{dgbmv}.
+D'après la documentation de la \texttt{MKL}\footnote{MKL Matrix Arguments : \href{https://www.smcm.iqfr.csic.es/docs/intel/mkl/mkl_manual/appendices/mkl_appB_MA.htm}{https://www.smcm.iqfr.csic.es/docs/intel/mkl/[...]\_MA.htm}} les éléments \texttt{+} n'ont pas besoin d'être initialiser, et les éléments $\ast$ ne sont pas utiliser par \texttt{dgbsv}. On pourrait donc théoriquement stocker ce qu'on veut à la place des $\ast$, et ces valeurs ne seront pas affectées par \texttt{dgbsv}.
 
 Cette matrice sera ensuite stocker dans un tableau 1D, il y a deux méthodes, soit on stocke les éléments en lisant la matrice ligne par ligne (\texttt{Row Major}), soit colonne par colonne (\texttt{Col Major}) (de gauche à droite et de haut en bas).
 \[ 
