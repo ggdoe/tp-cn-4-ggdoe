@@ -152,10 +152,15 @@ Et donc en isolant $d_j$, on obtient l'expression souhaité.
 \[
 d_j = a_{j,j} - \sum_{k=1}^{j-1} d_k l^2_{j,k}
 \]
-Pour trouvé les valeurs de \(L\), on utilise la même méthode avec les lignes d'en dessous : \texttt{A[j+1:n,j] = L[j+1:n,1:j]$\times$v[1:j]}, on développe puis on isole le vecteur souhaité \texttt{L[j+1:n,j]},
-\[\texttt{A[j+1:n,j] = d$_j$L(j+1:n,j) + L[j+1:n,1:j-1]$\times$v[1:j-1]}\]
-\[\texttt{d$_j$L(j+1:n,j) = A[j+1:n,j] - L[j+1:n,1:j-1]$\times$v[1:j-1]}\]
-\[\texttt{L(j+1:n,j) = $\frac{1}{\texttt{d}_j}$(A[j+1:n,j] - L[j+1:n,1:j-1]$\times$v[1:j-1])}\]
+Pour trouver les valeurs de \(L\), on utilise la même méthode avec les lignes d'en dessous : \texttt{A[j+1:n,j] = L[j+1:n,1:j]$\times$v[1:j]}, on développe puis on isole le vecteur souhaité \texttt{L[j+1:n,j]},
+\[
+	\begin{array}{r c l}
+	\texttt{A[j+1:n,j]} & = & \texttt{d}_j\texttt{L(j+1:n,j) + L[j+1:n,1:j-1]}\times \texttt{v[1:j-1]} \\
+	\texttt{d}_j\texttt{L(j+1:n,j)} & = & \texttt{A[j+1:n,j] - L[j+1:n,1:j-1]}\times \texttt{v[1:j-1]}\\
+	\texttt{L(j+1:n,j)} & = & \frac{1}{\texttt{d}_j}\texttt{(A[j+1:n,j] - L[j+1:n,1:j-1]}\times \texttt{v[1:j-1])} \\
+	\end{array}
+\]
+
 Il suffit de calculer pour chaque colonne $d_j$ puis \texttt{L(j+1:n,j)}, les $d_j$ formes la matrice diagonale D, il ne reste plus qu'a fixé la diagonale de L à 1.
 
 \textcolor{red}{TODO: à finir ??}
@@ -348,7 +353,6 @@ Même pour des matrices très grande (\(5000\times3000\)), la différence entre 
 On peut comparer les performances de \texttt{csr\_mv} avec \texttt{Ax}. Pour de grandes matrices, la majorité du temps est perdu en calculant le format CSR avec la fonction \texttt{make\_csr} (qui est en \(\mathcal{O}(n^2)\)). 
 
 \begin{table}[H]
-\centering
 \caption{Comparaison \texttt{csr\_mv - Ax}}
 \renewcommand*\arraystretch{1.3}
 \begin{tabular}{|l|c|c|c|}
@@ -366,6 +370,8 @@ On peut comparer les performances de \texttt{csr\_mv} avec \texttt{Ax}. Pour de 
 \end{tabular}
 \caption*{\textit{On vérifie systématiquement que les deux vecteurs résultats sont identiques.}}
 \end{table}
+
+
 
 On remarque que le produit matrice vecteur natif de \texttt{scilab} est dans tous les cas plus performant, que notre \texttt{csr\_mv}. Notre fonction est interprété par \texttt{scilab} c'est ce qui fait qu'elle est moins performante. Dans un langage compilé comme C, le produit matrice vecteur CSR serait plus rapide que le produit matrice vecteur classique.
 
@@ -479,9 +485,125 @@ On discrétise  en $n+2$ points,
 Pour trouver notre inconnue $u$, il suffit de résoudre le système \(Au = f\). On a avantage à profiter du fait que $A$ soit une matrice tridiagonale. On pourra mesurer efficacement l'erreur grâce à la solution analytique.
 
 
+\section{code C direct}
 
-\footnote{
-\textcolor{red}{TODO: Travail préliminaire et explication du cas test Poisson 1D}\newline
+\texttt{BLAS} et \texttt{LAPACK} sont des bibliothèques \texttt{FORTRAN}, leurs interfaces \texttt{C} sont nommées respectivement \texttt{CBLAS} et \texttt{LAPACKE}. Leur \textit{header} sont inclus dans notre \texttt{blaslapack\_headers.h}. \texttt{lib\_poisson1D.c} contient les fonctions qui nous permettrons d'initialiser nos matrices (poisson 1D et identité) et nos vecteurs (discrétisation de l'espace 1D, vecteur \texttt{f}, et solution analytique). Le fichier contient également les fonctions qui permettent d'écrire dans un fichier les différents vecteur et matrices, ainsi que des fonctions qui seront utile pour résoudre le problème par méthode itérative.
+
+Le fichier \texttt{tp\_env.c} permet de vérifier que \texttt{BLAS/LAPACK} est correctement installé sur la machine. Elle affiche différentes constantes de \texttt{float.h}, puis effectue une copie d'un tableau de double à l'aide de la fonction \texttt{cblas\_dcopy}.
+\begin{scriptsize}
+\begin{minted}{c}
+void cblas_dcopy(const int N, const double *X, const int incX, double *Y, const int incY);
+\end{minted}
+\end{scriptsize}
+\texttt{N} est le nombre d'élement du tableau X à copier dans Y, \texttt{incX} (resp. \texttt{incY}) est l'incrément qu'on doit ajouter à l'index pour chaque élément (en partant de 0). Par exemple, si on veut copier les éléments \texttt{X[0]}, \texttt{X[3]}, $\cdots$, \texttt{X[3N]} alors \texttt{incX} est égale à $3$.
+
+La résolution par méthode directe utilise la fonction \texttt{dgbsv} de \texttt{LAPACKE}, cette fonction résout un système de la forme $Ax = b$ d'inconnue $x$ par la factorisation LU\footnote{dgbsv : \href{http://www.netlib.org/lapack/explore-html/d3/d49/group__double_g_bsolve_gafa35ce1d7865b80563bbed6317050ad7.html}{http://www.netlib.org/lapack/explore-html/[...]0ad7.html}}. Avant d'appeler cette fonction plusieurs étape sont nécessaires. On déclare nos vecteurs (\texttt{X}, \texttt{RHS}, \texttt{EX\_SOL}) et on alloue la place à l'aide de \texttt{malloc}, nos trois vecteur comportent \texttt{*la} éléments. On discrétise notre espace \texttt{X} (sur \texttt{*la + 2} points) avec la fonction :
+\begin{scriptsize}
+\begin{minted}{c}
+void set_grid_points_1D(double* x, int* la);
+\end{minted}
+\end{scriptsize}
+Puis on initialise le vecteur \texttt{f} ($Au = f$) ici appelé RHS, avec la fonction : \begin{scriptsize}
+\begin{minted}{c}
+void set_dense_RHS_DBC_1D(double* RHS, int* la, double* BC0, double* BC1);
+\end{minted}
+\end{scriptsize}
+qui remplit de zéro les \texttt{*la} éléments de \texttt{RHS} excepter pour le premier et le dernier élément où elle mets respectivement \texttt{*BC0} et \texttt{*BC1}.
+
+Il ne reste plus qu'à initialiser la matrice $A$, pour appeler \texttt{d\textcolor{red}{gb}sv}, la matrice doit être stocker sous format \textit{band}.
+En stockage \textit{band}, on ne stocke que les diagonales de la matrice. On écrit sous forme de matrice les diagonales de A. On aligne à droite les diagonales supérieurs en laissant vide les premiers éléments (et alignement à gauche pour les diagonales inférieurs).
+\[
+\begin{pmatrix}
+		2	& 	-1	&	0	& 0	\\
+		-1	&	2	&\ddots	& 0	\\
+		0	& \ddots&\ddots	&-1	\\
+		0	& 	0	& -1 	& 2	\\
+	\end{pmatrix}
+	\Longrightarrow
+	\begin{pmatrix}
+		\ast& 	-1	&	-1	&	\cdots	&	-1	&	-1	\\
+		2	& 	2	&	2	&	\cdots	&	2	&	2	\\
+		-1	& 	-1	&	-1	&	\cdots	&	-1	&	\ast\\
+	\end{pmatrix}
+\]
+D'après la documentation de \texttt{LAPACK}\footnote{Stockage Band LAPACK : \href{https://www.netlib.org/lapack/lug/node124.html}{https://www.netlib.org/lapack/lug/node124.html}}, les éléments $\ast$ n'ont pas besoin d'être initialiser à 0.
+La même page de documentation nous informe que lorsque qu'on effectue une factorisation \texttt{LU}, on a besoin d'allouer \texttt{*kl} diagonales supérieurs additionnelle. Pour poisson 1D, notre matrice possède 1 diagonale inférieur (\texttt{*kl}) et 1 supérieur (\texttt{*ku}). Pour la factorisation \texttt{LU}, il faut donc au total réserver 1 diagonale inférieur, 1 diagonale principale, et 2 diagonales supérieurs.
+\[ 
+	\Longrightarrow
+	\begin{pmatrix}
+		\ast& \ast	&	\texttt{+}	&	\cdots	&	\texttt{+}	&	\texttt{+}	\\
+		\ast& 	-1	&	-1	&	\cdots	&	-1	&	-1	\\
+		2	& 	2	&	2	&	\cdots	&	2	&	2	\\
+		-1	& 	-1	&	-1	&	\cdots	&	-1	&	\ast\\
+	\end{pmatrix}
+\]
+D'après la documentation de la \texttt{MKL}\footnote{MKL Matrix Arguments : \href{https://www.smcm.iqfr.csic.es/docs/intel/mkl/mkl_manual/appendices/mkl_appB_MA.htm}{https://www.smcm.iqfr.csic.es/docs/intel/mkl/[...]\_MA.htm}} les éléments \texttt{+} n'ont pas besoin d'être initialiser, et les éléments $\ast$ ne sont pas utiliser par \texttt{dgbmv}. On pourrait donc théoriquement stocker ce qu'on veut à la place des $\ast$, et ces valeurs ne seront pas affectées par \texttt{dgbmv}.
+
+Cette matrice sera ensuite stocker dans un tableau 1D, il y a deux méthodes, soit on stocke les éléments en lisant la matrice ligne par ligne (\texttt{Row Major}), soit colonne par colonne (\texttt{Col Major}) (de gauche à droite et de haut en bas).
+\[ 
+	exemple : \texttt{Col Major} \Longrightarrow
+	\begin{bmatrix}
+	\ast & \ast	& 2 & -1 & \cdots & \texttt{+} & -1 & 2 & \ast
+	\end{bmatrix}
+\]
+On appelle ce tableau \texttt{AB} (\texttt{A band}), on doit alloué \texttt{la(2kl+ku+1)} éléments.
+On peut maintenant appeler \texttt{dgbsv}.
+\begin{scriptsize}
+\begin{minted}{c}
+int LAPACKE_dgbsv( int matrix_layout, int n, int kl, int ku, int nrhs, 
+		  double* ab, int ldab, int* ipiv, double* b, int ldb );
+\end{minted}
+\end{scriptsize}
+\begin{itemize}
+\item On doit indiquer le mode de stockage de notre matrice band (\texttt{matrix\_layout}) : soit \texttt{LAPACK\_ROW\_MAJOR}, soit \texttt{LAPACK\_COL\_MAJOR}.
+\item \texttt{n}, \texttt{kl} et \texttt{ku} sont la taille de notre matrice et le nombre de diagonale.
+\item \texttt{nrhs} est le nombre de vecteur avec lesquels on veut résoudre le système (avec des \texttt{RHS} différents), ici on n'a qu'un seul \texttt{RHS}.
+\item \texttt{ab} est notre matrice au format \texttt{matrix\_layout}.
+\item \texttt{ldab} est la \texttt{leading dimension} de \texttt{ab}, c'est-à-dire le nombre d'élément  séparant deux lignes consécutive en mémoire pour la même colonne. En \texttt{Row Major} il y a \texttt{la} éléments séparant deux lignes, et en \texttt{Col Major} il y en a $\texttt{2kl+ku+1 = lab}$.
+\item \texttt{ipiv} stocke les index des pivots de la factorisation \texttt{LU}, on doit donc alloué préalablement \texttt{ipiv} avec \texttt{la} éléments. Dans le code on alloue avec \texttt{calloc} qui initialise chaque éléments avec 0.
+\item \texttt{b} est notre \texttt{RHS}, et \texttt{ldb} est la \texttt{leading dimension} de b, donc 1 en \texttt{Row Major} et \texttt{la} en \texttt{Col Major}.
+\end{itemize}
+La fonction écrit la solution directement dans \texttt{RHS}.
+Elle retourne 0 pour un succès, sinon elle renvoie un nombre \texttt{<0} en cas d'erreur dans un des arguments d'appel de la fonction, ou \texttt{>0} si la solution n'a pas pu être calculer. On stocke cette valeurs dans \texttt{info} qu'on affiche après l'appel de la fonction.
+
+Pour vérifier la solution, on la compare avec la solution analytique. On doit d'abord remettre en ordre la permutation de la factorisation \texttt{LU}, par chance \texttt{ipiv} représente la permutation identité, on peut donc comparer directement \texttt{RHS} et \texttt{EX\_SOL}. On calcule l'erreur commise :
+\[
+	\frac{\lVert ex\_sol - rhs \rVert}{\lVert rhs \rVert}
+\]
+On doit donc faire 2 produits scalaires, et 1 \texttt{daxpy}. On utilise les fonctions de \texttt{BLAS 1} :
+\begin{scriptsize}
+\begin{minted}{c}
+double cblas_ddot(const int N, const double *X, const int incX, const double *Y, const int incY);
+void cblas_daxpy(const int N, const double alpha, const double *X, const int incX, 
+						double *Y, const int incY);
+\end{minted}
+\end{scriptsize}
+Ces fonctions s'utilisent de la même manière que \texttt{cblas\_dcopy} plus haut (\texttt{incX} et \texttt{incY}). Le résultat de \texttt{cblas\_ddot} est renvoyé par valeur retour, \texttt{cblas\_daxpy} stocke le résultat dans \texttt{y}.
+\texttt{Alpha} est le scalaire de la \texttt{daxpy} (\(y = \alpha x + y\)).
+
+\begin{table}[H]
+\caption{Comparaison \texttt{EX\_SOL - RHS}}
+\centering
+\renewcommand*\arraystretch{1.1}
+\begin{tabular}{|l|c|r|}
+  \hline
+  Nombre de points (\texttt{la - 2}) & Erreur relative (Row Major) & Erreur relative (Col Major) \\
+  \hline
+	27	&	\(1.40 \times 10^{-15}\)	&	\(1.40 \times 10^{-15}\)	\\
+	58	&	\(6.27 \times 10^{-16}\)	&	\(6.27 \times 10^{-16}\)	\\
+	102	&	\(5.88 \times 10^{-15}\)	&	\(5.88 \times 10^{-15}\)	\\
+	258	&	\(3.11 \times 10^{-14}\)	&	\(3.11 \times 10^{-14}\)	\\
+	999	&	\(1.04 \times 10^{-13}\)	&	\(1.04 \times 10^{-13}\)	\\
+  \hline
+\end{tabular}
+\caption*{\textit{Les résultats sont identiques en \texttt{Row Major} et \texttt{Col Major}.}}
+\end{table}
+
+
+
+
+
+\footnote{\textcolor{red}{TODO: Travail préliminaire et explication du cas test Poisson 1D}\newline
 \textcolor{red}{TODO: Explication du code, de son architecture, des appels aux bibliothèques externes}\newline
 \textcolor{red}{TODO: Explication du format de stockage et illustration des stockages en Row Major et Col Major}\newline
 \textcolor{red}{TODO: Explication et validation des appels à dgbsv}\newline
