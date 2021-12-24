@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
+\usepackage[left=3cm,right=3cm,top=2cm,bottom=2cm]{geometry}
 \usepackage[french]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
@@ -7,7 +8,6 @@
 \usepackage{amsmath}
 \usepackage{minted}
 \usepackage{caption}
-%\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
 \usepackage{tikz}
 \usepackage{hyperref}
 
@@ -340,7 +340,7 @@ endfunction
 
 Pour tester cet algorithme, on a besoin de pouvoir générer des matrices creuses, et calculer leur forme CSR.
 
-Un moyen efficace pour généré des matrices creuse est de remplir une matrice vide de quelques valeurs aléatoires, puis de permuter aléatoirement ses éléments. Pour cela on utilise la fonction \texttt{grand(1, "prm", A)} de \texttt{scilab}, le \texttt{"prm"} signifie qu'on souhaite une permutation, le 1 signifie que l'on en veut qu'une seule, et \texttt{A} est la matrice à permuter. Voir l'implémentation dans \texttt{csr.sci: make\_mat\_creuse(..)}
+Un moyen efficace pour généré des matrices creuse est de remplir une matrice vide de quelques valeurs aléatoires, puis de permuter aléatoirement ses éléments. Pour cela on utilise la fonction \texttt{grand(1, "prm", A)} de \texttt{scilab}, le \texttt{"prm"} signifie qu'on souhaite une permutation, le 1 signifie que l'on en veut qu'une seule, et \texttt{A} est la matrice à permuter. Voir l'implémentation dans \texttt{csr.sci: make\_mat\_creuse}.
 \newline\indent
 
 L'algorithme pour calculer le format CSR est aussi très simple. On parcours \(A\) avec deux boucle fort (selon les lignes), on note les valeurs non nulle dans \texttt{AA}, les colonnes dans \texttt{JA}, et lorsqu'on change de ligne on mets d'indice dans \texttt{IA}. Cependant étant donné qu'on doit parcourir toutes les cases de \(A\), cet algorithme est en \(\mathcal{O}(n^2)\). Voir l'implémentation dans \texttt{csr.sci: make\_csr(A)}.
@@ -560,7 +560,7 @@ int LAPACKE_dgbsv( int matrix_layout, int n, int kl, int ku, int nrhs,
 \end{minted}
 \end{scriptsize}
 \begin{itemize}
-\item On doit indiquer le mode de stockage de notre matrice \textit{band} (\texttt{matrix\_layout}) : soit \texttt{LAPACK\_ROW\_MAJOR}, soit \texttt{LAPACK\_COL\_MAJOR}.
+\item On doit indiquer le mode de stockage de notre matrice \textit{band} (\texttt{matrix\_layout}) : soit \\ \texttt{LAPACK\_ROW\_MAJOR}, soit \texttt{LAPACK\_COL\_MAJOR}.
 \item \texttt{n}, \texttt{kl} et \texttt{ku} sont la taille de notre matrice et le nombre de diagonale.
 \item \texttt{nrhs} est le nombre de vecteur avec lesquels on veut résoudre le système (avec des \texttt{RHS} différents), ici on n'a qu'un seul \texttt{RHS}.
 \item \texttt{ab} est notre matrice au format \texttt{matrix\_layout}.
@@ -656,7 +656,7 @@ On vérifie le résultat de la même manière que pour \texttt{dgbsv}, en mesura
 
 \section{LU pour Poisson 1D}
 
-D'après \texttt{scilab}, la factorisation $LU$ d'une matrice de Poisson 1D a une forme simple. $L$ et $U$ sont des matrices bidiagonale (respectivement \textit{lower} et \textit{upper}) où la diagonale principale de $L$ ne comporte que des 1, et la diagonale supérieur de $U$ ne comporte que des $-1$.
+D'après \texttt{scilab}, la factorisation $LU$ d'une matrice de Poisson 1D s'exprime simplement. $L$ et $U$ sont des matrices bidiagonale (respectivement \textit{lower} et \textit{upper}) où la diagonale principale de $L$ ne comporte que des 1, et la diagonale supérieur de $U$ ne comporte que des $-1$.
 
 \[
 	A = 
@@ -666,22 +666,72 @@ D'après \texttt{scilab}, la factorisation $LU$ d'une matrice de Poisson 1D a un
 			0	& \ddots&\ddots	&-1	\\
 			0	& 	0	& -1 	& 2	\\
 	\end{pmatrix}
-	\Longrightarrow
+\]
+\[
 	L = 
 	\begin{pmatrix}
-			2	& 	-1	&	0	& 0	\\
-			-1	&	2	&\ddots	& 0	\\
-			0	& \ddots&\ddots	&-1	\\
-			0	& 	0	& -1 	& 2	\\
+			1	& 	0	&	0	& 0	\\
+			l_1	&	1	&	0	& 0	\\
+			0	& \ddots&\ddots	& 0	\\
+			0	& 	0	& l_{n-1} 	& 1	\\
 	\end{pmatrix},
 	U = 
 	\begin{pmatrix}
-			2	& 	-1	&	0	& 0	\\
-			-1	&	2	&\ddots	& 0	\\
-			0	& \ddots&\ddots	&-1	\\
-			0	& 	0	& -1 	& 2	\\
+			u_1	& 	-1	&	0	& 0	\\
+			0	&	u_2	&\ddots	& 0	\\
+			0	& 	0	&\ddots	& -1\\
+			0	& 	0	& 0 	& u_n	\\
 	\end{pmatrix}
 \]
+La représentation de $L$ et $U$ en format \textit{band} est :
+\[
+	L = 
+	\begin{pmatrix}
+		1	& 	1	&	1	&	\cdots	&	1		&	1	\\
+		l_1	& 	l_2	&	l_3	&	\cdots	&	l_{n-1}	&	\ast	\\
+	\end{pmatrix}
+	\quad
+	U = 
+	\begin{pmatrix}
+		\ast& 	-1	&	-1	&	\cdots	&	-1		&	-1	\\
+		u_1	& 	u_2	&	u_3	&	\cdots	&	u_{n-1}	&	u_n	\\
+	\end{pmatrix}
+\]
+Pour trouver les coefficients $\left\lbrace l_k \right\rbrace$ et $\left\lbrace u_k \right\rbrace$, on développe le produit $LU$
+
+\[
+	LU = 
+	\begin{pmatrix}
+			u_1		& 	-1		&	0				& 0		\\
+			l_1 u_1	&	(u_2-l_1)	&\ddots				& 0		\\
+			0		& 	\ddots	&\ddots				& -1	\\
+			0		& 	0		& (l_{n-1} u_{n-1}) 	& (u_n-u_{n-1})	\\
+	\end{pmatrix}
+\]
+En identifiant avec $A$, on obtient le système suivant :
+\[
+	\left \{
+	\begin{array}{r c l}
+		u_1 & = & 2 \\
+		u_{n+1} - l_n & = & 2 \\
+		l_n u_n & = & -1
+	\end{array}
+	\right .
+	\Longrightarrow
+	\left \{
+	\begin{array}{r c l}
+		l_1 = -\frac{1}{2} & , & u_1 = 2 \\
+		u_{n+1} & = & 2 - \frac{1}{u_n} \\
+		l_n & = & -\frac{1}{u_n}
+	\end{array}
+	\right .
+\]
+On implémente cette algorithme dans \texttt{lib\_poisson1D.c} dans les fonctions \texttt{myluB\_ColMajor\_poisson1D} et \texttt{myluB\_RowMajor\_poisson1D}. Il n'existe pas de fonction \texttt{dgbmm} dans \texttt{BLAS 3}, pour vérifier que notre résultat est bon, on effectue 2 produits matrice-vecteur \(L(Ux)\), où x est la solution exacte, puis on compare le résultat à \(f = \left[T_0\ 0\ 0\ \cdots 0\ T_1\right]\) (en norme-2).
+
+
+Pour vérifier que le résultat est le bon, on compare la norme de \(LU\) et de la matrice originale $A$. On a besoin de faire un produit matrice-matrice, on utilise la route de \texttt{BLAS 3} 
+
+
 
 \footnote{\textcolor{red}{TODO: Travail préliminaire et explication du cas test Poisson 1D}\newline
 \textcolor{red}{TODO: Explication du code, de son architecture, des appels aux bibliothèques externes}\newline
