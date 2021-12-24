@@ -5,7 +5,9 @@
 \usepackage{lmodern}
 \usepackage{graphicx}
 \usepackage{amsmath}
-\usepackage{minted, caption}
+\usepackage{minted}
+\usepackage{caption}
+%\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
 \usepackage{tikz}
 \usepackage{hyperref}
 
@@ -313,7 +315,7 @@ Au format CSR, elle se présente sous cette forme :
 
 On remarque qu'au format CSR, la taille du vecteur \texttt{IA} est la même que celle du \texttt{nombre de lignes + 1}, le vecteur de sorti du produit \(Ax\) aura donc un nombre d'élément égal à \texttt{length(IA)-1}
 
-Soit \(x\) un vecteur, on souhaite faire le produit matrice vecteur \(Ax\), le vecteur x soit avoir le même nombre d'élément que le nombre de colonne de \(A\).
+Soit \(x\) un vecteur, on souhaite faire le produit matrice-vecteur \(Ax\), le vecteur x soit avoir le même nombre d'élément que le nombre de colonne de \(A\).
 La boucle principale de l'algorithme de multiplication CSR doit se faire sûr le nombre d'élément non nul de A, à l'intérieur de celle ci on place une boucle while qui incrémentera l'indicateur de la ligne actuelle tant que \texttt{IA} nous dit de sauter de ligne. Le produit scalaire se fait élément par élément, l'élément \texttt{AA(i)} est positionner à la colonne \texttt{JA(i)} donc on sait par quel élément de \(x\) on doit le multiplier \texttt{x(JA(i))}. La complexité de l'algorithme est en \(\mathcal{O}(\texttt{nombre\ éléments\ non\ nul})\).
 
 \begin{scriptsize}
@@ -373,7 +375,7 @@ On peut comparer les performances de \texttt{csr\_mv} avec \texttt{Ax}. Pour de 
 
 
 
-On remarque que le produit matrice vecteur natif de \texttt{scilab} est dans tous les cas plus performant, que notre \texttt{csr\_mv}. Notre fonction est interprété par \texttt{scilab} c'est ce qui fait qu'elle est moins performante. Dans un langage compilé comme C, le produit matrice vecteur CSR serait plus rapide que le produit matrice vecteur classique.
+On remarque que le produit matrice-vecteur natif de \texttt{scilab} est dans tous les cas plus performant, que notre \texttt{csr\_mv}. Notre fonction est interprété par \texttt{scilab} c'est ce qui fait qu'elle est moins performante. Dans un langage compilé comme C, le produit matrice-vecteur CSR serait plus rapide que le produit matrice-vecteur classique.
 
 \section{Poisson 1D}
 
@@ -490,6 +492,7 @@ Pour trouver notre inconnue $u$, il suffit de résoudre le système \(Au = f\). 
 \texttt{BLAS} et \texttt{LAPACK} sont des bibliothèques \texttt{FORTRAN}, leurs interfaces \texttt{C} sont nommées respectivement \texttt{CBLAS} et \texttt{LAPACKE}. Leur \textit{header} sont inclus dans notre \texttt{blaslapack\_headers.h}. \texttt{lib\_poisson1D.c} contient les fonctions qui nous permettrons d'initialiser nos matrices (poisson 1D et identité) et nos vecteurs (discrétisation de l'espace 1D, vecteur \texttt{f}, et solution analytique). Le fichier contient également les fonctions qui permettent d'écrire dans un fichier les différents vecteur et matrices, ainsi que des fonctions qui seront utile pour résoudre le problème par méthode itérative.
 
 Le fichier \texttt{tp\_env.c} permet de vérifier que \texttt{BLAS/LAPACK} est correctement installé sur la machine. Elle affiche différentes constantes de \texttt{float.h}, puis effectue une copie d'un tableau de double à l'aide de la fonction \texttt{cblas\_dcopy}.
+
 \begin{scriptsize}
 \begin{minted}{c}
 void cblas_dcopy(const int N, const double *X, const int incX, double *Y, const int incY);
@@ -541,7 +544,7 @@ La même page de documentation nous informe que lorsque qu'on effectue une facto
 \]
 D'après la documentation de la \texttt{MKL}\footnote{MKL Matrix Arguments : \href{https://www.smcm.iqfr.csic.es/docs/intel/mkl/mkl_manual/appendices/mkl_appB_MA.htm}{https://www.smcm.iqfr.csic.es/docs/intel/mkl/[...]\_MA.htm}} les éléments \texttt{+} n'ont pas besoin d'être initialiser, et les éléments $\ast$ ne sont pas utiliser par \texttt{dgbsv}. On pourrait donc théoriquement stocker ce qu'on veut à la place des $\ast$, et ces valeurs ne seront pas affectées par \texttt{dgbsv}.
 
-Cette matrice sera ensuite stocker dans un tableau 1D, il y a deux méthodes, soit on stocke les éléments en lisant la matrice ligne par ligne (\texttt{Row Major}), soit colonne par colonne (\texttt{Col Major}) (de gauche à droite et de haut en bas).
+Cette matrice sera ensuite stockée dans un tableau 1D, il y a deux méthodes, soit on stocke les éléments en lisant la matrice ligne par ligne (\texttt{Row Major}), soit colonne par colonne (\texttt{Col Major}) (de gauche à droite et de haut en bas).
 \[ 
 	exemple : \texttt{Col Major} \Longrightarrow
 	\begin{bmatrix}
@@ -553,11 +556,11 @@ On peut maintenant appeler \texttt{dgbsv}.
 \begin{scriptsize}
 \begin{minted}{c}
 int LAPACKE_dgbsv( int matrix_layout, int n, int kl, int ku, int nrhs, 
-		  double* ab, int ldab, int* ipiv, double* b, int ldb );
+                   double* ab, int ldab, int* ipiv, double* b, int ldb );
 \end{minted}
 \end{scriptsize}
 \begin{itemize}
-\item On doit indiquer le mode de stockage de notre matrice band (\texttt{matrix\_layout}) : soit \texttt{LAPACK\_ROW\_MAJOR}, soit \texttt{LAPACK\_COL\_MAJOR}.
+\item On doit indiquer le mode de stockage de notre matrice \textit{band} (\texttt{matrix\_layout}) : soit \texttt{LAPACK\_ROW\_MAJOR}, soit \texttt{LAPACK\_COL\_MAJOR}.
 \item \texttt{n}, \texttt{kl} et \texttt{ku} sont la taille de notre matrice et le nombre de diagonale.
 \item \texttt{nrhs} est le nombre de vecteur avec lesquels on veut résoudre le système (avec des \texttt{RHS} différents), ici on n'a qu'un seul \texttt{RHS}.
 \item \texttt{ab} est notre matrice au format \texttt{matrix\_layout}.
@@ -570,7 +573,7 @@ Elle retourne 0 pour un succès, sinon elle renvoie un nombre \texttt{<0} en cas
 
 Pour vérifier la solution, on la compare avec la solution analytique. On doit d'abord remettre en ordre la permutation de la factorisation \texttt{LU}, par chance \texttt{ipiv} représente la permutation identité, on peut donc comparer directement \texttt{RHS} et \texttt{EX\_SOL}. On calcule l'erreur commise :
 \[
-	\frac{\lVert ex\_sol - rhs \rVert}{\lVert rhs \rVert}
+	\frac{\lVert ex\_sol - rhs \rVert_2}{\lVert rhs \rVert_2}
 \]
 On doit donc faire 2 produits scalaires, et 1 \texttt{daxpy}. On utilise les fonctions de \texttt{BLAS 1} :
 \begin{scriptsize}
@@ -584,12 +587,12 @@ Ces fonctions s'utilisent de la même manière que \texttt{cblas\_dcopy} plus ha
 \texttt{Alpha} est le scalaire de la \texttt{daxpy} (\(y = \alpha x + y\)).
 
 \begin{table}[H]
-\caption{Comparaison \texttt{EX\_SOL - RHS}}
+\caption{dgbsv - Comparaison \texttt{EX\_SOL - RHS}}
 \centering
 \renewcommand*\arraystretch{1.1}
 \begin{tabular}{|l|c|r|}
   \hline
-  Nombre de points (\texttt{la - 2}) & Erreur relative (Row Major) & Erreur relative (Col Major) \\
+  Nbr points (\texttt{la - 2}) & Err. rel. (Row Major) & Err. rel. (Col Major) \\
   \hline
 	27	&	\(1.40 \times 10^{-15}\)	&	\(1.40 \times 10^{-15}\)	\\
 	58	&	\(6.27 \times 10^{-16}\)	&	\(6.27 \times 10^{-16}\)	\\
@@ -601,9 +604,84 @@ Ces fonctions s'utilisent de la même manière que \texttt{cblas\_dcopy} plus ha
 \caption*{\textit{Les résultats sont identiques en \texttt{Row Major} et \texttt{Col Major}.}}
 \end{table}
 
+\section{dgbmv}
 
+\texttt{dgbmv} est une routine de \texttt{BLAS 2} qui calcule un \texttt{daxpy} entre matrice et vecteur de la forme \(y = \alpha Ax + \beta y\) où $\alpha$ et $\beta$ sont des scalaires.\footnote{netlib dgbmv : \href{http://www.netlib.org/lapack/explore-html/d7/d15/group__double__blas__level2_ga0dc187c15a47772440defe879d034888.html}{http://www.netlib.org/lapack/explore-html/[...].html}}
+\begin{scriptsize}
+\begin{minted}{c}
+void cblas_dgbmv(CBLAS_LAYOUT layout,
+                 CBLAS_TRANSPOSE TransA, const int M, const int N,
+                 const int KL, const int KU, const double alpha,
+                 const double *A, const int lda, const double *X,
+                 const int incX, const double beta, double *Y, const int incY);
+\end{minted}
+\end{scriptsize}
+La plupart des paramètres de la fonction s'utilise de la même manière que les fonctions utilisées précédemment. \texttt{M} est le nombre de lignes, \texttt{N} le nombre de colonnes. Il ne faut pas oublier que cette fonction n'effectue pas de factorisation \texttt{LU}, lorsqu'on construit la matrice \textit{band} $A$, il ne faut pas rajouter de diagonale supérieur supplémentaire (on a $\texttt{kv} = 0$). Deux \texttt{enum} sont réservé pour indiquer le layout, et le type de transposition de la matrice :
+\begin{scriptsize}
+\begin{minted}{c}
+// cblas-netlib.h 
+typedef enum {CblasRowMajor=101, CblasColMajor=102} CBLAS_LAYOUT;
+typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSPOSE;
+\end{minted}
+\end{scriptsize}
+On remarque que \texttt{LAPACKE} et \texttt{CBLAS} utilise la même norme pour indiquer le layout, la seul différence est que \texttt{CBLAS} utilise une enum alors que \texttt{LAPACKE} des \texttt{\#define} (voir \texttt{lapacke.h}). On a trois chois pour choisir le type de transposition : pas de transposition, transposition, ou bien transconjuguée (adjoint) en cas de matrice à coefficient complexe.
+On remarque aussi que \texttt{dgbmv} est de type \texttt{void}, en regardant la doc netlib on voit que la gestion d'erreur se fait à l'intérieur de \texttt{dgbmv} via l'appel de la fonction \texttt{xerbla} qui print la variable locale \texttt{info} puis stoppe l'exécution du programme en cas d'erreur.
 
+Dans notre cas, on fera appel à \texttt{dgbmv} pour calculer \(Ax\), où $A$ notre matrice \textit{band}, et $x$ notre vecteur solution analytique. Le résultat doit donc être \(Ax = f\) où $f$ est notre vecteur \texttt{RHS}. On doit donc mettre $\alpha = 1$ et $\beta = 0$. Notre matrice est carrée ($\texttt{la} \times \texttt{la}$), on a $\texttt{inX} = \texttt{incY} = 1$. Quant à la \texttt{leading dimension}, en \texttt{Col Major} : $\texttt{lda} = \texttt{kl} + \texttt{ku} + 1$. En \texttt{Row Major}, \texttt{lda} devrait être égale à la taille de la diagonale principale (\texttt{la}) mais ça ne fonctionne pas dû à un bug (on trouve une erreur relative $\approx 5.04$ pour $\texttt{la}=100$).
+\begin{scriptsize}
+\begin{minted}{c}
+// appel de dgbmv en Col Major
+cblas_dgbmv(CblasColMajor, CblasNoTrans, la, la, kl, ku, 1, AB, lab, EX_SOL, 1, 0, y, 1);
+\end{minted}
+\end{scriptsize}
 
+On vérifie le résultat de la même manière que pour \texttt{dgbsv}, en mesurant l'erreur commise avec \(\frac{\lVert Ax - f \rVert_2}{\lVert f \rVert_2}\).
+
+ \begin{table}[H]
+\caption{dgbmv - Comparaison $Ax - f$}
+\centering
+\renewcommand*\arraystretch{1.1}
+\begin{tabular}{|l|c|}
+  \hline
+  Nombre points (\texttt{la - 2}) & Erreur relative (Row Major) \\
+  \hline
+	27	&	\(8.74 \times 10^{-16}\) \\
+	58	&	\(9.89 \times 10^{-16}\) \\
+	102	&	\(6.40 \times 10^{-16}\) \\
+	258	&	\(1.21 \times 10^{-15}\) \\
+	999	&	\(5.08 \times 10^{-15}\) \\
+  \hline
+\end{tabular}
+\end{table}
+
+\section{LU pour Poisson 1D}
+
+D'après \texttt{scilab}, la factorisation $LU$ d'une matrice de Poisson 1D a une forme simple. $L$ et $U$ sont des matrices bidiagonale (respectivement \textit{lower} et \textit{upper}) où la diagonale principale de $L$ ne comporte que des 1, et la diagonale supérieur de $U$ ne comporte que des $-1$.
+
+\[
+	A = 
+	\begin{pmatrix}
+			2	& 	-1	&	0	& 0	\\
+			-1	&	2	&\ddots	& 0	\\
+			0	& \ddots&\ddots	&-1	\\
+			0	& 	0	& -1 	& 2	\\
+	\end{pmatrix}
+	\Longrightarrow
+	L = 
+	\begin{pmatrix}
+			2	& 	-1	&	0	& 0	\\
+			-1	&	2	&\ddots	& 0	\\
+			0	& \ddots&\ddots	&-1	\\
+			0	& 	0	& -1 	& 2	\\
+	\end{pmatrix},
+	U = 
+	\begin{pmatrix}
+			2	& 	-1	&	0	& 0	\\
+			-1	&	2	&\ddots	& 0	\\
+			0	& \ddots&\ddots	&-1	\\
+			0	& 	0	& -1 	& 2	\\
+	\end{pmatrix}
+\]
 
 \footnote{\textcolor{red}{TODO: Travail préliminaire et explication du cas test Poisson 1D}\newline
 \textcolor{red}{TODO: Explication du code, de son architecture, des appels aux bibliothèques externes}\newline
@@ -613,10 +691,6 @@ Ces fonctions s'utilisent de la même manière que \texttt{cblas\_dcopy} plus ha
 \textcolor{red}{TODO: Implémentation du LU pour matrice tridiagonal (au format GB en C)}\newline
 \textcolor{red}{TODO: Exercice Jacobi et Richardson avec implémentation Scilab}\newline
 \textcolor{red}{TODO: + finitions}}
-
-\begin{minted}{scilab}
-function [] = test_myldlt()
-\end{minted}
 
 
 \end{document}
