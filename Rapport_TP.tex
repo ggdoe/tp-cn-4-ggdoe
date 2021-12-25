@@ -40,7 +40,11 @@
 
 \maketitle
 
-\noindent
+\section{Introduction}
+
+L'objectif de ce TP est de se familiariser avec \texttt{scilab} et les interfaces \texttt{C} de \texttt{BLAS} et de \texttt{LAPACK}. 
+
+\newline\noindent
 \href{https://github.com/ggdoe/tp-cn-4-ggdoe}{https://github.com/ggdoe/tp-cn-4-ggdoe}\newline
 \href{https://github.com/ggdoe/tp-cn-5-ggdoe}{https://github.com/ggdoe/tp-cn-5-ggdoe}
 
@@ -163,7 +167,7 @@ Pour trouver les valeurs de \(L\), on utilise la même méthode avec les lignes 
 	\end{array}
 \]
 
-Il suffit de calculer pour chaque colonne $d_j$ puis \texttt{L(j+1:n,j)}, les $d_j$ formes la matrice diagonale D, il ne reste plus qu'a fixé la diagonale de L à 1.
+Il suffit de calculer pour chaque colonne $d_j$ puis \texttt{L(j+1:n,j)}. Les $d_j$ forment la matrice diagonale D, il ne reste plus qu'a fixé la diagonale de L à 1.
 
 \textcolor{red}{TODO: à finir ??}
 
@@ -379,6 +383,7 @@ On remarque que le produit matrice-vecteur natif de \texttt{scilab} est dans tou
 
 \section{Poisson 1D}
 
+L'équation de la chaleur 1D s'écrit :
 \[
 	\left \{
 	\begin{array}{r c l}
@@ -388,6 +393,7 @@ On remarque que le produit matrice-vecteur natif de \texttt{scilab} est dans tou
 	\end{array}
 	\right .
 \]
+En faisant un développement Taylor, on obtient :
 \[
 	\left \{
 	\begin{array}{r c l}
@@ -396,6 +402,7 @@ On remarque que le produit matrice-vecteur natif de \texttt{scilab} est dans tou
 	\end{array}
 	\right .
 \]
+On additionne ces deux equations pour supprime le terme $T'$, puis on isole $T''$.
 \[
 	\begin{array}{r c l}
 		T(x-h)+T(x+h) & = & 2T(x) + h^2 T''(x) + o(h^3)\\
@@ -406,7 +413,7 @@ On remarque que le produit matrice-vecteur natif de \texttt{scilab} est dans tou
 		T''(x) & = & \frac{T(x-h) - 2T(x) + T(x+h)}{h^2}  + o(h)\\
 	\end{array}
 \]
-On discrétise  en $n+2$ points, 
+On discrétise l'espace en $n+2$ points avec $h$ le pas.
 \[
 	\begin{array}{r c l}
 	h & = & \frac{x_{max} - x_{min}}{n-1} = \frac{1}{n+1} \\
@@ -414,6 +421,7 @@ On discrétise  en $n+2$ points,
 	T(x_i) & = & T_i \\
 	\end{array}
 \]
+On peut donc écrire :
 \[
 	\begin{array}{r c c c l}
 	T(x_i + h) & = & T(x_{i+1}) & = & T_{i+1} \\
@@ -430,6 +438,7 @@ On discrétise  en $n+2$ points,
 		-T_{i-1} + 2T_i - T_{i+1} & = & \frac{h^2g(x_i)}{k} & = & \frac{g_i}{k(n+1)^2}\\
 	\end{array}
 \]
+On obtient donc un système d'équation linéaire qu'on peut représenter par une matrice.
 \[
 	u = 
 	\begin{bmatrix}
@@ -455,6 +464,14 @@ On discrétise  en $n+2$ points,
 		g_1 \\ g_2 \\ \vdots \\ g_{n-1} \\ g_n \\
 	\end{pmatrix}
 \]
+Cependant y a des problèmes aux bord, on est censé avoir :
+\[
+	\begin{array}{r c l}
+		-T_0 + 2T_1 - T_2 & = & \frac{g_1}{k(n+1)^2}\\
+		-T_{n-1} + 2T_n - T_1 & = & \frac{g_n}{k(n+1)^2}\\
+	\end{array}
+\]
+On doit donc ajouter un terme correctif à $f$ :
 \[
 	\begin{bmatrix}
 		T_0 & 0 & \cdots & 0 & T_1 \\
@@ -469,25 +486,25 @@ On discrétise  en $n+2$ points,
 		T_0 \\ 0 \\ \vdots \\ 0 \\ T_1 \\
 	\end{pmatrix}
 \]
+En posant $g=0$ on obtient :
 \[
 	g = 0 \quad	\Longrightarrow \quad 
 	f = \begin{pmatrix}
 		T_0 \\ 0 \\ \vdots \\ 0 \\ T_1 \\
 	\end{pmatrix}
 \]
-\textcolor{red}{TODO: sol analytique}
+De plus l'équation différentielle se simplifie en :
 \[
-	-k \frac{\partial^2 T}{\partial x^2} = 0
+	\frac{\partial^2 T}{\partial x^2} = 0
 \]
-	Implique que $T$ est linéaire en $x$, de plus les conditions aux limites imposent que 
+Ça implique que $T$ est linéaire en $x$, les conditions aux limites imposent que 
 \[
 	T(x) = T_0 + x(T_1 - T_0)
 \]
 
 Pour trouver notre inconnue $u$, il suffit de résoudre le système \(Au = f\). On a avantage à profiter du fait que $A$ soit une matrice tridiagonale. On pourra mesurer efficacement l'erreur grâce à la solution analytique.
 
-
-\section{code C direct}
+\section{Résolution Poisson 1D méthode directe}
 
 \texttt{BLAS} et \texttt{LAPACK} sont des bibliothèques \texttt{FORTRAN}, leurs interfaces \texttt{C} sont nommées respectivement \texttt{CBLAS} et \texttt{LAPACKE}. Leur \textit{header} sont inclus dans notre \texttt{blaslapack\_headers.h}. \texttt{lib\_poisson1D.c} contient les fonctions qui nous permettrons d'initialiser nos matrices (poisson 1D et identité) et nos vecteurs (discrétisation de l'espace 1D, vecteur \texttt{f}, et solution analytique). Le fichier contient également les fonctions qui permettent d'écrire dans un fichier les différents vecteur et matrices, ainsi que des fonctions qui seront utile pour résoudre le problème par méthode itérative.
 
@@ -603,6 +620,12 @@ Ces fonctions s'utilisent de la même manière que \texttt{cblas\_dcopy} plus ha
 \end{tabular}
 \caption*{\textit{Les résultats sont identiques en \texttt{Row Major} et \texttt{Col Major}.}}
 \end{table}
+\begin{figure}[H]
+\caption{Temps d'exécution \texttt{dgbsv}}
+\centering
+\includegraphics[scale=0.70]{time_dgbsv}
+\caption*{\textit{Une partie du temps d'exécution sert à réinitialiser \texttt{RHS} car pour une meilleur mesure on répète le calcule mais dgbsv réécrit dans RHS, il faut donc le réinitialiser.}}
+\end{figure}
 
 \section{dgbmv}
 
@@ -653,11 +676,16 @@ On vérifie le résultat de la même manière que pour \texttt{dgbsv}, en mesura
   \hline
 \end{tabular}
 \end{table}
+\begin{figure}[H]
+\caption{Temps d'exécution \texttt{dgbmv}}
+\centering
+\includegraphics[scale=0.70]{time_dgbmv}
+\end{figure}
+
 
 \section{LU pour Poisson 1D}
 
 D'après \texttt{scilab}, la factorisation $LU$ d'une matrice de Poisson 1D s'exprime simplement. $L$ et $U$ sont des matrices bidiagonale (respectivement \textit{lower} et \textit{upper}) où la diagonale principale de $L$ ne comporte que des 1, et la diagonale supérieur de $U$ ne comporte que des $-1$.
-
 \[
 	A = 
 	\begin{pmatrix}
@@ -726,21 +754,72 @@ En identifiant avec $A$, on obtient le système suivant :
 	\end{array}
 	\right .
 \]
-On implémente cette algorithme dans \texttt{lib\_poisson1D.c} dans les fonctions \texttt{myluB\_ColMajor\_poisson1D} et \texttt{myluB\_RowMajor\_poisson1D}. Il n'existe pas de fonction \texttt{dgbmm} dans \texttt{BLAS 3}, pour vérifier que notre résultat est bon, on effectue 2 produits matrice-vecteur \(L(Ux)\), où x est la solution exacte, puis on compare le résultat à \(f = \left[T_0\ 0\ 0\ \cdots 0\ T_1\right]\) (en norme-2).
+On implémente cet algorithme dans \texttt{lib\_poisson1D.c} en stockage \textit{band} dans la fonction \texttt{myluB\_colMajor\_poisson1D}. Il n'existe pas de fonction \texttt{dgbmm} dans \texttt{BLAS 3}, pour vérifier que notre résultat est bon, on effectue 2 produits matrice-vecteur \(L(Ux)\), où x est la solution exacte, puis on compare le résultat à \(f = \left[T_0\ 0\ 0\ \cdots 0\ T_1\right]\) (en norme-2).
+On fait donc deux \texttt{dgbmv} avec $\beta = 0$, la \texttt{leading dimension} dans les deux cas est $2$. Entre les deux \texttt{dgbmv} on échange \texttt{EX\_SOL} et \texttt{y} pour obtenir le résultat final dans y.
+\begin{scriptsize}
+\begin{minted}{c}
+  cblas_dgbmv(CblasColMajor, CblasNoTrans, la, la, 0, ku, 1, UB, 1 + ku, EX_SOL, 1, 0, y, 1); // Ux = y
+  cblas_dswap(la, EX_SOL, 1, y, 1);
+  cblas_dgbmv(CblasColMajor, CblasNoTrans, la, la, kl, 0, 1, LB, 1 + kl, EX_SOL, 1, 0, y, 1); // Lx =  y
+\end{minted}
+\end{scriptsize}
+Puis on compare \texttt{y} et \texttt{RHS} ($f$) en norme-2 avec un \texttt{daxpy} et deux \texttt{ddot}.
+
+On peut aussi implémenter cette algorithme en stockage dense puis vérifier le résultat avec une norme matricielle. Pour calculer la norme de $A$ on peut utiliser la fonction \texttt{dlange} de \texttt{LAPACK}, mais puisque $A$ est symétrique on peut tout aussi bien utiliser \texttt{dlansy} pour profiter de la symétrie de $A$.
+\begin{scriptsize}
+\begin{minted}{c}
+double LAPACKE_dlansy( int matrix_layout, char norm, char uplo, lapack_int n, const double* a, lapack_int lda );
+\end{minted}
+\end{scriptsize}
+Les matrices $A$, $L$ et $U$ sont écrites en \texttt{Row Major}. Comme norme on choisi par exemple la norme de Frobenius 'F'. Vu que $A$ contient tous les éléments des deux côtés de la diagonale, on peut choisir $\texttt{uplo} = 'U' ou 'L'$ indifféremment. \texttt{n} et \texttt{lda} sont tous deux égale à \texttt{lda} car $A$ est carré.
+
+Pour calculer $LU-A$, on utilise \texttt{dgemm} de \texttt{BLAS 3}.
+\begin{scriptsize}
+\begin{minted}{c}
+void cblas_dgemm(CBLAS_LAYOUT layout, CBLAS_TRANSPOSE TransA,
+                 CBLAS_TRANSPOSE TransB, const int M, const int N,
+                 const int K, const double alpha, const double *A,
+                 const int lda, const double *B, const int ldb,
+                 const double beta, double *C, const int ldc);
+\end{minted}
+\end{scriptsize}
+$A$ est symétrique donc le \texttt{layout} importe peu, mais la factorisation $LU$ dans \texttt{mylu\_rowMajor\_poisson1D} est implémenté en \texttt{Row Major}. Aucune des matrice n'est transposé. \texttt{M}, \texttt{N}, \texttt{K}, et les \texttt{leading dimension} sont toutes égales à \texttt{la} car ce sont des matrices carrées.  
+Pour calculer \( \lVert LU-A \rVert \) on utilise \texttt{dlange} de façon très similaire à \texttt{dlansy}.
+\begin{scriptsize}
+\begin{minted}{c}
+temp = LAPACKE_dlansy(LAPACK_ROW_MAJOR, 'F', 'U', la, A, la);
+cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, la, la, la, 1, L, la, U, la,-1, A, la);
+relres = LAPACKE_dlange(LAPACK_ROW_MAJOR, 'F', la, la, A, la);
+\end{minted}
+\end{scriptsize}\begin{table}[H]
+\caption{Factorisation LU - Comparaison $LU - A$}
+\centering
+\renewcommand*\arraystretch{1.1}
+\begin{tabular}{|l|c|c|}
+  \hline
+  \texttt{la} & Err. rel. (Band, Col Major) & Err. rel. (Dense, Row Major) \\
+  \hline
+	25	&	\(9.53 \times 10^{-16}\)	&	\(0.00\) \\
+	56	&	\(1.01 \times 10^{-15}\)	&	\(8.59 \times 10^{-18}\) \\
+	100	&	\(7.66 \times 10^{-16}\)	&	\(6.42 \times 10^{-18}\) \\
+	256	&	\(1.38 \times 10^{-15}\)	&	\(4.00 \times 10^{-18}\) \\
+	999	&	\(3.20 \times 10^{-15}\)	&	\(2.48 \times 10^{-18}\) \\
+  \hline
+\end{tabular}
+\end{table}
+\begin{figure}[H]
+\caption{Temps d'exécution \texttt{LU} band et dense}
+\centering
+\includegraphics[scale=0.70]{time_lu_band_dense}
+\caption*{\textit{Pour de grand n, le temps de vérification de $LU$ \textit{dense} devient très long dû aux \texttt{dlan**} et \texttt{dgemm}.}}
+\end{figure}
+On remarque que le temps de construction de $LU$ dense explose (\(\approx \mathcal{O}(n^2)\)) alors que les deux algorithmes initialise le même nombre d'élément. On peut expliquer la différence par la proximité en mémoire des éléments non nuls du format \textit{band} par rapport au format \textit{dense} : une plus grande partie du tableau \textit{band} rentre en mémoire cache.
+
+\section{Jacobi et Richardson \texttt{Scilab}}
 
 
-Pour vérifier que le résultat est le bon, on compare la norme de \(LU\) et de la matrice originale $A$. On a besoin de faire un produit matrice-matrice, on utilise la route de \texttt{BLAS 3} 
-
-
-
-\footnote{\textcolor{red}{TODO: Travail préliminaire et explication du cas test Poisson 1D}\newline
-\textcolor{red}{TODO: Explication du code, de son architecture, des appels aux bibliothèques externes}\newline
-\textcolor{red}{TODO: Explication du format de stockage et illustration des stockages en Row Major et Col Major}\newline
-\textcolor{red}{TODO: Explication et validation des appels à dgbsv}\newline
-\textcolor{red}{TODO: Explication et validation des appels à dgbmv (en priorité ColMajor et mise en place des tests : si ça ne marche pas expliquer le résultat des tests)}\newline
-\textcolor{red}{TODO: Implémentation du LU pour matrice tridiagonal (au format GB en C)}\newline
 \textcolor{red}{TODO: Exercice Jacobi et Richardson avec implémentation Scilab}\newline
-\textcolor{red}{TODO: + finitions}}
+\textcolor{red}{TODO: + finitions}
 
 
 \end{document}
