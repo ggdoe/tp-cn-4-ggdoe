@@ -42,9 +42,9 @@
 
 \section{Introduction}
 
-L'objectif de ce TP est de se familiariser avec \texttt{scilab} et les interfaces \texttt{C} de \texttt{BLAS} et de \texttt{LAPACK}. 
-
-Tous les codes est disponible sur github :
+L'objectif de ce TP est de se familiariser avec \texttt{scilab} et les interfaces \texttt{C} de \texttt{BLAS} et de \texttt{LAPACK} en étudiant le problème de Poisson en 1 dimension. Une solution analytique de ce problème est très facilement exprimable, ce qui sera utile pour calculer les erreurs commise par les différents algorithmes de résolution numérique que l'on mettra en place dans ce TP.
+\\\newline\noindent
+Tous les codes sont disponibles sur \texttt{github} :
 \newline\noindent
 \href{https://github.com/ggdoe/tp-cn-4-ggdoe}{https://github.com/ggdoe/tp-cn-4-ggdoe}\newline
 \href{https://github.com/ggdoe/tp-cn-5-ggdoe}{https://github.com/ggdoe/tp-cn-5-ggdoe}
@@ -170,13 +170,11 @@ Pour trouver les valeurs de \(L\), on utilise la même méthode avec les lignes 
 
 Il suffit de calculer pour chaque colonne $d_j$ puis \texttt{L(j+1:n,j)}. Les $d_j$ forment la matrice diagonale D, il ne reste plus qu'a fixé la diagonale de L à 1.
 
-\textcolor{red}{TODO: à finir ??}
-
 Pour tester notre algorithme on a besoin de matrices symétriques, on peut en générer avec \texttt{A = rand(n,n) ; A = A' * A}.
 Ainsi \(A\) vérifie bien \(A = A^t\)
 \newline\indent
 
-On teste notre algorithme avec la fonction \texttt{myldlt.sci: test\_myldlt()}
+On teste notre algorithme avec la fonction \texttt{myldlt.sci: test\_myldlt()}\footnote{\texttt{myldlt.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/myldlt.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/myldlt.sci}}
 
 \begin{table}[H]
 \renewcommand*\arraystretch{1.3}
@@ -211,8 +209,6 @@ En sommant entre \texttt{1} et \texttt{n}, on trouve la complexité en temps de 
 \[
 \sum_{j=1}^n (n-j+2)(j-1) = \mathcal{O}(\frac{n^3}{6}) = \mathcal{O}(n^3)
 \]
-
-\textcolor{red}{TODO: préciser la complexité ?}\newline\indent
 On teste la complexité en temps notre algorithme avec la fonction \texttt{myldlt.sci: time\_myldlt()}.
 \begin{table}[H]
 \centering
@@ -236,7 +232,7 @@ On teste la complexité en temps notre algorithme avec la fonction \texttt{myldl
 \caption*{\textit{On utilise les fonctions }\texttt{mean}\textit{ et }\texttt{stdev} \textit{pour calculer la moyenne et l'écart-type de l'erreur et du temps d'exécution.}}
 \end{table}
 
-On trace la variation du temps d'exécution avec la fonction \texttt{myldlt.sci: plot\_time\_myldlt()}.
+On trace la variation du temps d'exécution avec la fonction \texttt{myldlt.sci: plot\_time\_myldlt()}.\footnote{\texttt{myldlt.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/myldlt.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/myldlt.sci}}
 
 \begin{figure}[H]
 \caption{Temps d'exécution \(LDL^t\)}
@@ -245,7 +241,7 @@ On trace la variation du temps d'exécution avec la fonction \texttt{myldlt.sci:
 \end{figure}
 Dans un graphique \(\log\log\), les fonctions \(x^k\) apparaissent comme des droites de pente \(k\). Ici la courbe de la moyenne à une pente d'environ \(2\), ce qui est significativement moins que la valeur théorique \(\mathcal{O}(n^3)\). C'est très certainement dû aux optimisations de \texttt{BLAS/LAPACK}, cependant on remarque que la courbe n'est pas tous à fait linéaire, vers les grandes valeur de \(n\) la pente devient supérieur à \(2\).
 
-On compare \(LDL^t\) et \(LU\) (sans pivot partiel) avec la fonction \texttt{myldlt.sci: comp\_mylu\_myldlt()}
+On compare \(LDL^t\) et \(LU\) (sans pivot partiel) avec la fonction \texttt{myldlt.sci: comp\_mylu\_myldlt()}\footnote{\texttt{myldlt.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/myldlt.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/myldlt.sci}}
 
 \begin{table}[H]
 \centering
@@ -345,12 +341,12 @@ endfunction
 
 Pour tester cet algorithme, on a besoin de pouvoir générer des matrices creuses, et calculer leur forme CSR.
 
-Un moyen efficace pour généré des matrices creuse est de remplir une matrice vide de quelques valeurs aléatoires, puis de permuter aléatoirement ses éléments. Pour cela on utilise la fonction \texttt{grand(1, "prm", A)} de \texttt{scilab}, le \texttt{"prm"} signifie qu'on souhaite une permutation, le 1 signifie que l'on en veut qu'une seule, et \texttt{A} est la matrice à permuter. Voir l'implémentation dans \texttt{csr.sci: make\_mat\_creuse}.
+Un moyen efficace pour généré des matrices creuse est de remplir une matrice vide de quelques valeurs aléatoires, puis de permuter aléatoirement ses éléments. Pour cela on utilise la fonction \texttt{grand(1, "prm", A)} de \texttt{scilab}, le \texttt{"prm"} signifie qu'on souhaite une permutation, le 1 signifie que l'on en veut qu'une seule, et \texttt{A} est la matrice à permuter. Voir l'implémentation dans \texttt{csr.sci: make\_mat\_creuse}.\footnote{\texttt{csr.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}}
 \newline\indent
 
 L'algorithme pour calculer le format CSR est aussi très simple. On parcours \(A\) avec deux boucle fort (selon les lignes), on note les valeurs non nulle dans \texttt{AA}, les colonnes dans \texttt{JA}, et lorsqu'on change de ligne on mets d'indice dans \texttt{IA}. Cependant étant donné qu'on doit parcourir toutes les cases de \(A\), cet algorithme est en \(\mathcal{O}(n^2)\). Voir l'implémentation dans \texttt{csr.sci: make\_csr(A)}.
 
-On peut tester cet algorithme en faisant et défaisant la forme CSR (avec la fonction \texttt{csr.sci: undo\_csr(..)}), puis en prenant la 2-norme de la matrice initiale moins celle qui a été fait puis défait. On trouve que ces matrices sont toujours identique quelque soit la taille de la matrices initiale. Voir l'implémentation dans \texttt{csr.sci: test\_csr()}
+On peut tester cet algorithme en faisant et défaisant la forme CSR (avec la fonction \texttt{csr.sci: undo\_csr(..)}), puis en prenant la 2-norme de la matrice initiale moins celle qui a été fait puis défait. On trouve que ces matrices sont toujours identique quelque soit la taille de la matrices initiale. Voir l'implémentation dans \texttt{csr.sci: test\_csr()}\footnote{\texttt{csr.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}}
 \newline\indent
 
 On peut maintenant tester la multiplication matrice creuse vecteur. On génère d'abord une matrice creuse \texttt{n}\(\times\)\texttt{m} avec la fonction \texttt{make\_mat\_creuse}, on génère aussi un vecteur creux \texttt{m}\(\times\)\texttt{1} avec la même fonction. On converti cette matrice en CSR avec \texttt{make\_csr}, puis on récupère le vecteur sortie de \texttt{csr\_mv} que l'on compare avec \(Ax\) (en prenant la 2-norme de la différence). Voir l'implémentation dans \texttt{csr.sci: test\_csr\_mv()}
@@ -570,7 +566,7 @@ Cette matrice sera ensuite stockée dans un tableau 1D, il y a deux méthodes, s
 	\end{bmatrix}
 \]
 On appelle ce tableau \texttt{AB} (\texttt{A band}), on doit alloué \texttt{la(2kl+ku+1)} éléments.
-On peut maintenant appeler \texttt{dgbsv}.
+On peut maintenant appeler \texttt{dgbsv}.\footnote{\texttt{tp2\_poisson1D\_direct.c} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/TP_Poisson_C_for_students/src/tp2_poisson1D_direct.c}{https://github.com/ggdoe/tp-cn-5-ggdoe/[...]/src/tp2\_poisson1D\_direct.c}}
 \begin{scriptsize}
 \begin{minted}{c}
 int LAPACKE_dgbsv( int matrix_layout, int n, int kl, int ku, int nrhs, 
@@ -651,14 +647,14 @@ typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSP
 On remarque que \texttt{LAPACKE} et \texttt{CBLAS} utilise la même norme pour indiquer le layout, la seul différence est que \texttt{CBLAS} utilise une enum alors que \texttt{LAPACKE} des \texttt{\#define} (voir \texttt{lapacke.h}). On a trois chois pour choisir le type de transposition : pas de transposition, transposition, ou bien transconjuguée (adjoint) en cas de matrice à coefficient complexe.
 On remarque aussi que \texttt{dgbmv} est de type \texttt{void}, en regardant la doc netlib on voit que la gestion d'erreur se fait à l'intérieur de \texttt{dgbmv} via l'appel de la fonction \texttt{xerbla} qui print la variable locale \texttt{info} puis stoppe l'exécution du programme en cas d'erreur.
 
-Dans notre cas, on fera appel à \texttt{dgbmv} pour calculer \(Ax\), où $A$ notre matrice \textit{band}, et $x$ notre vecteur solution analytique. Le résultat doit donc être \(Ax = f\) où $f$ est notre vecteur \texttt{RHS}. On doit donc mettre $\alpha = 1$ et $\beta = 0$. Notre matrice est carrée ($\texttt{la} \times \texttt{la}$), on a $\texttt{inX} = \texttt{incY} = 1$. Quant à la \texttt{leading dimension}, en \texttt{Col Major} : $\texttt{lda} = \texttt{kl} + \texttt{ku} + 1$. En \texttt{Row Major}, \texttt{lda} devrait être égale à la taille de la diagonale principale (\texttt{la}) mais ça ne fonctionne pas dû à un bug (on trouve une erreur relative $\approx 5.04$ pour $\texttt{la}=100$).
+Dans notre cas, on fera appel à \texttt{dgbmv}\footnote{\texttt{tp2\_dgbmv.c} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/TP_Poisson_C_for_students/src/tp2_dgbmv.c}{https://github.com/ggdoe/tp-cn-5-ggdoe/[...]/src/tp2\_dgbmv.c}} pour calculer \(Ax\), où $A$ notre matrice \textit{band}, et $x$ notre vecteur solution analytique. Le résultat doit donc être \(Ax = f\) où $f$ est notre vecteur \texttt{RHS}. On doit donc mettre $\alpha = 1$ et $\beta = 0$. Notre matrice est carrée ($\texttt{la} \times \texttt{la}$), on a $\texttt{inX} = \texttt{incY} = 1$. Quant à la \texttt{leading dimension}, en \texttt{Col Major} : $\texttt{lda} = \texttt{kl} + \texttt{ku} + 1$. En \texttt{Row Major}, \texttt{lda} devrait être égale à la taille de la diagonale principale (\texttt{la}) mais ça ne fonctionne pas dû à un bug (on trouve une erreur relative $\approx 5.04$ pour $\texttt{la}=100$).
 \begin{scriptsize}
 \begin{minted}{c}
 // appel de dgbmv en Col Major
 cblas_dgbmv(CblasColMajor, CblasNoTrans, la, la, kl, ku, 1, AB, lab, EX_SOL, 1, 0, y, 1);
 \end{minted}
 \end{scriptsize}
-
+\noindent
 On vérifie le résultat de la même manière que pour \texttt{dgbsv}, en mesurant l'erreur commise avec \(\frac{\lVert Ax - f \rVert_2}{\lVert f \rVert_2}\).
 
  \begin{table}[H]
@@ -755,7 +751,7 @@ En identifiant avec $A$, on obtient le système suivant :
 	\end{array}
 	\right .
 \]
-On implémente cet algorithme dans \texttt{lib\_poisson1D.c} en stockage \textit{band} dans la fonction \texttt{myluB\_colMajor\_poisson1D}. Il n'existe pas de fonction \texttt{dgbmm} dans \texttt{BLAS 3}, pour vérifier que notre résultat est bon, on effectue 2 produits matrice-vecteur \(L(Ux)\), où x est la solution exacte, puis on compare le résultat à \(f = \left[T_0\ 0\ 0\ \cdots 0\ T_1\right]\) (en norme-2).
+On implémente cet algorithme dans \texttt{lib\_poisson1D.c}\footnote{\texttt{tp2\_poisson1D\_lu.c} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/TP_Poisson_C_for_students/src/tp2_poisson1D_lu.c}{https://github.com/ggdoe/tp-cn-5-ggdoe/[...]/src/tp2\_poisson1D\_lu.c}} en stockage \textit{band} dans la fonction \texttt{myluB\_colMajor\_poisson1D}. Il n'existe pas de fonction \texttt{dgbmm} dans \texttt{BLAS 3}, pour vérifier que notre résultat est bon, on effectue 2 produits matrice-vecteur \(L(Ux)\), où x est la solution exacte, puis on compare le résultat à \(f = \left[T_0\ 0\ 0\ \cdots 0\ T_1\right]\) (en norme-2).
 On fait donc deux \texttt{dgbmv} avec $\beta = 0$, la \texttt{leading dimension} dans les deux cas est $2$. Entre les deux \texttt{dgbmv} on échange \texttt{EX\_SOL} et \texttt{y} pour obtenir le résultat final dans y.
 \begin{scriptsize}
 \begin{minted}{c}
@@ -817,7 +813,10 @@ relres = LAPACKE_dlange(LAPACK_ROW_MAJOR, 'F', la, la, A, la);
 Les fonctions initialisent $2n$ éléments pour chaque matrice $L$ et $U$, la complexité théorique des algorithmes est donc en \(\mathcal{O}(4n)\).
 On remarque que le temps de construction de $LU$ dense explose alors que les deux algorithmes initialise le même nombre d'élément. On peut expliquer la différence par la proximité en mémoire des éléments non nuls du format \textit{band} par rapport au format \textit{dense} : une plus grande partie des éléments à initialiser du tableau \textit{band} rentre en mémoire cache.
 
-\section{Jacobi et Richardson \texttt{Scilab}}
+\section{Jacobi et Gauss-Seidel \texttt{Scilab}}
+
+
+\section{Richardson \texttt{Scilab}}
 L'itération de Richardson s'écrit : 
 \[
 	\begin{array}{r c l r}
@@ -915,7 +914,7 @@ $\alpha_{opt}$ est à l'intersection des courbes après qu'une ai été reflét�
 	\alpha_{opt} = \frac{2}{\lambda_{min} + \lambda_{max}}
 \]
 Pour trouver les valeurs propre de on utilise la fonction \texttt{spec} de \texttt{scilab}. On trouve que quelque soit la taille de $A$, $\lambda_{min} + \lambda_{max} = 4$, on a donc $\alpha_{opt} = \frac{1}{2}$.
-On implémente l'algorithme en \texttt{scilab} puis on trace les courbes d'erreurs (par rapport à la solution analytique) en fonction de $\alpha$ :
+On implémente l'algorithme en \texttt{scilab}\footnote{\texttt{richardson.sci} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/richardson.sci}{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/richardson.sci}} puis on trace les courbes d'erreurs (par rapport à la solution analytique) en fonction de $\alpha$ :
 \begin{figure}[H]
 \caption{Erreur Richardson pour n = 100}
 \centering
