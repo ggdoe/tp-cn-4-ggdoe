@@ -44,6 +44,7 @@
 
 L'objectif de ce TP est de se familiariser avec \texttt{scilab} et les interfaces \texttt{C} de \texttt{BLAS} et de \texttt{LAPACK}. 
 
+Tous les codes est disponible sur github :
 \newline\noindent
 \href{https://github.com/ggdoe/tp-cn-4-ggdoe}{https://github.com/ggdoe/tp-cn-4-ggdoe}\newline
 \href{https://github.com/ggdoe/tp-cn-5-ggdoe}{https://github.com/ggdoe/tp-cn-5-ggdoe}
@@ -813,13 +814,114 @@ relres = LAPACKE_dlange(LAPACK_ROW_MAJOR, 'F', la, la, A, la);
 \includegraphics[scale=0.70]{time_lu_band_dense}
 \caption*{\textit{Pour de grand n, le temps de vérification de $LU$ \textit{dense} devient très long dû aux \texttt{dlan**} et \texttt{dgemm}.}}
 \end{figure}
-On remarque que le temps de construction de $LU$ dense explose (\(\approx \mathcal{O}(n^2)\)) alors que les deux algorithmes initialise le même nombre d'élément. On peut expliquer la différence par la proximité en mémoire des éléments non nuls du format \textit{band} par rapport au format \textit{dense} : une plus grande partie du tableau \textit{band} rentre en mémoire cache.
+Les fonctions initialisent $2n$ éléments pour chaque matrice $L$ et $U$, la complexité théorique des algorithmes est donc en \(\mathcal{O}(4n)\).
+On remarque que le temps de construction de $LU$ dense explose alors que les deux algorithmes initialise le même nombre d'élément. On peut expliquer la différence par la proximité en mémoire des éléments non nuls du format \textit{band} par rapport au format \textit{dense} : une plus grande partie des éléments à initialiser du tableau \textit{band} rentre en mémoire cache.
 
 \section{Jacobi et Richardson \texttt{Scilab}}
-
-
-\textcolor{red}{TODO: Exercice Jacobi et Richardson avec implémentation Scilab}\newline
-\textcolor{red}{TODO: + finitions}
+L'itération de Richardson s'écrit : 
+\[
+	\begin{array}{r c l r}
+		x^{k+1} & = & x^k + \alpha(b-Ax^k) & \quad avec\ \alpha > 0
+	\end{array}
+\]
+On peut la réécrire sous la forme :
+\[
+	\begin{array}{r c l}
+		x^{k+1} & = & (I-\alpha A)x^k + \alpha b \\
+		 		& = & G_\alpha x^k + \alpha b
+	\end{array}
+\]
+Pour que le processus converge, il faut que $\rho (G_\alpha) < 1$, où :
+\[
+	\begin{array}{r c l}
+		\rho (G_\alpha) & = & max\left\lbrace \left| \lambda_G \right|,\ \lambda_G\in\lambda (G_\alpha)\right\rbrace
+	\end{array}
+\]
+On peut encadrer les $\lambda_G$ par les valeurs propres de $A$.
+\[
+	\begin{array}{r c l r}
+		Ax & = & \lambda x & \quad \lambda_{min} \leq \lambda \leq \lambda_{max}\\
+		(I-\alpha A)x & = & (1-\alpha \lambda) x &\\
+		G_\alpha x & = & (1-\alpha \lambda) x &\\
+	\end{array}
+\]
+On cherche donc un $\alpha$ tel que :
+\[
+	\left \{
+	\begin{array}{r c l}
+		\left| 1 - \alpha \lambda_{min} \right| < 1 \\
+		\left| 1 - \alpha \lambda_{max} \right| < 1 \\
+	\end{array}
+	\right .
+\]
+\begin{itemize}
+\item Si 
+\[
+	\begin{array}{r c l}
+		1 - \alpha \lambda \leq 0 & , \quad \lambda > 0 \\
+		\alpha \geq \frac{1}{\lambda} & \\
+	\end{array}
+\]
+Alors, 
+\[
+		\alpha \lambda - 1 < 1 \quad
+		\Rightarrow \quad \alpha < \frac{2}{\lambda}
+\]
+Et on a donc :
+\[
+		\frac{1}{\lambda} \leq \alpha < \frac{2}{\lambda}
+\]
+\item Si 
+\[
+	\begin{array}{r c l}
+		1 - \alpha \lambda \leq 0 & , \quad \lambda < 0 \\
+		\alpha \leq \frac{1}{\lambda} & \\
+	\end{array}
+\]
+Alors, $\alpha$ doit être négatif, c'est impossible.
+\item Si 
+\[
+	\begin{array}{r c l}
+		1 - \alpha \lambda & \geq & 0 \\
+		\alpha & \leq & \frac{1}{\lambda} \\
+	\end{array}
+\]
+Alors, 
+\[
+		1 - \alpha \lambda < 1 \quad
+		\Rightarrow \quad -\alpha \lambda < 0 \quad
+		\Rightarrow \quad \lambda > 0
+\]
+Et on a donc :
+\[
+		0 < \alpha \leq \frac{1}{\lambda}
+\]
+\end{itemize}
+On a donc l'encadrement suivant :
+\[
+	0 < \alpha < \frac{2}{\lambda}
+\]
+Le $\alpha$ optimal minimise tous les $\left| 1 - \alpha \lambda \right|$. On trace les courbe associées $\lambda_{min}$ et $\lambda_{max}$ pour le trouver :
+\begin{figure}[H]
+\caption{Courbes $\left| 1 - \alpha \lambda \right|$}
+\centering
+\includegraphics[scale=0.70]{alpha_opt}
+\end{figure}
+$\alpha_{opt}$ est à l'intersection des courbes après qu'une ai été reflété. On a donc :
+\[
+	1 - \alpha_{opt} \lambda_{min} = \alpha_{opt} \lambda_{max} - 1
+\]
+\[
+	\alpha_{opt} = \frac{2}{\lambda_{min} + \lambda_{max}}
+\]
+Pour trouver les valeurs propre de on utilise la fonction \texttt{spec} de \texttt{scilab}. On trouve que quelque soit la taille de $A$, $\lambda_{min} + \lambda_{max} = 4$, on a donc $\alpha_{opt} = \frac{1}{2}$.
+On implémente l'algorithme en \texttt{scilab} puis on trace les courbes d'erreurs (par rapport à la solution analytique) en fonction de $\alpha$ :
+\begin{figure}[H]
+\caption{Erreur Richardson pour n = 100}
+\centering
+\includegraphics[scale=0.70]{conv_richardson_n100}
+\end{figure}
+On retrouve que pour un $\alpha$ très légèrement supérieur à $\alpha_{opt}$, le processus de Richardson diverge.
 
 
 \end{document}
