@@ -41,13 +41,13 @@
 \maketitle
 
 \section{Introduction}
-
-L'objectif de ce TP est de se familiariser avec \texttt{scilab} et les interfaces \texttt{C} de \texttt{BLAS} et de \texttt{LAPACK} en étudiant le problème de Poisson en 1 dimension. Une solution analytique de ce problème est très facilement exprimable, ce qui sera utile pour calculer les erreurs commise par les différents algorithmes de résolution numérique que l'on mettra en place dans ce TP.
+L'objectif de ce TP est de se familiariser avec \texttt{scilab} et les interfaces \texttt{C} de \texttt{BLAS} et de \texttt{LAPACK} en étudiant le problème de Poisson en 1 dimension. Une solution analytique de ce problème est très facilement exprimable, ce qui sera utile pour calculer les erreurs commises par les différents algorithmes de résolution numérique que l'on mettra en place dans ce TP.
 \\\newline\noindent
 Tous les codes sont disponibles sur \texttt{github} :
-\newline\noindent
-\href{https://github.com/ggdoe/tp-cn-4-ggdoe}{https://github.com/ggdoe/tp-cn-4-ggdoe}\newline
-\href{https://github.com/ggdoe/tp-cn-5-ggdoe}{https://github.com/ggdoe/tp-cn-5-ggdoe}
+\begin{itemize}
+\item \href{https://github.com/ggdoe/tp-cn-4-ggdoe}{https://github.com/ggdoe/tp-cn-4-ggdoe}
+\item \href{https://github.com/ggdoe/tp-cn-5-ggdoe}{https://github.com/ggdoe/tp-cn-5-ggdoe}
+\end{itemize}
 
 \section{Décomposition LDL\(^t\)}
 
@@ -65,7 +65,7 @@ Soit \(A\) symétrique
 \]
 
 \(A\) peut s'écrire sous la forme \(LU\) ou \(LDL^t\), avec \(L\) \textit{unit lower triangular}, U \textit{upper triangular} et D diagonale.
-En identifiant les termes on trouve que \(U = DL^t\), et les \(L\) sont les même.
+En identifiant les termes on trouve que \(U = DL^t\), et les \(L\) sont les mêmes.
 
 \[
 	D = 
@@ -116,7 +116,7 @@ On obtient donc U simplement en multipliant chaque ligne \(i\) de \(L^t\) par \(
 			&  && d_n 	\\
 	\end{pmatrix}
 \]
-Chaque élément \(a_{i,j}\) peut être obtenu en faisant le produit scalaire d'une ligne de L par une colonne de U. Ces matrices étant triangulaire, on peut obtenir le vecteur \texttt{A(j:n,j)} simplement en étendant le vecteur \texttt{L(j,1:j)} en la sous matrice \texttt{L(j:n,1:j)}, comme ci dessous :
+Chaque élément \(a_{i,j}\) peut être obtenu en faisant le produit scalaire d'une ligne de L par une colonne de U. Ces matrices étant triangulaires, on peut obtenir le vecteur \texttt{A(j:n,j)} simplement en étendant le vecteur \texttt{L(j,1:j)} en la sous matrice \texttt{L(j:n,1:j)}, comme ci dessous :
 \[
 	A = 
 	\begin{pmatrix}
@@ -155,11 +155,11 @@ On cherche à obtenir $d_j$, en prenant le produit de la j\ieme\ ligne et de la 
 \[
 a_{j,j} = d_j + \sum_{k=1}^{j-1} d_k l^2_{j,k}
 \]
-Et donc en isolant $d_j$, on obtient l'expression souhaité.
+Et donc en isolant $d_j$, on obtient l'expression souhaitée.
 \[
 d_j = a_{j,j} - \sum_{k=1}^{j-1} d_k l^2_{j,k}
 \]
-Pour trouver les valeurs de \(L\), on utilise la même méthode avec les lignes d'en dessous : \texttt{A[j+1:n,j] = L[j+1:n,1:j]$\times$v[1:j]}, on développe puis on isole le vecteur souhaité \texttt{L[j+1:n,j]},
+Pour trouver les valeurs de \(L\), on utilise la même méthode avec les lignes du dessous : \texttt{A[j+1:n,j] = L[j+1:n,1:j]$\times$v[1:j]}, on développe puis on isole le vecteur souhaité \texttt{L[j+1:n,j]},
 \[
 	\begin{array}{r c l}
 	\texttt{A[j+1:n,j]} & = & \texttt{d}_j\texttt{L(j+1:n,j) + L[j+1:n,1:j-1]}\times \texttt{v[1:j-1]} \\
@@ -168,7 +168,7 @@ Pour trouver les valeurs de \(L\), on utilise la même méthode avec les lignes 
 	\end{array}
 \]
 
-Il suffit de calculer pour chaque colonne $d_j$ puis \texttt{L(j+1:n,j)}. Les $d_j$ forment la matrice diagonale D, il ne reste plus qu'a fixé la diagonale de L à 1.
+Il suffit de calculer pour chaque colonne $d_j$ puis \texttt{L(j+1:n,j)}. Les $d_j$ forment la matrice diagonale D, il ne reste plus qu'à fixer la diagonale de L à 1.
 
 Pour tester notre algorithme on a besoin de matrices symétriques, on peut en générer avec \texttt{A = rand(n,n) ; A = A' * A}.
 Ainsi \(A\) vérifie bien \(A = A^t\)
@@ -198,13 +198,13 @@ On teste notre algorithme avec la fonction \texttt{myldlt.sci: test\_myldlt()}\f
 \end{table}
 
 
-L'erreur est très faible même pour de grande valeur de \texttt{n} ou un grand conditionnement de \(A\), notre algorithme \(LDL^t\) a une bonne précision.\newline\indent
+L'erreur est très faible même pour de grandes valeurs de \texttt{n} ou un grand conditionnement de \(A\), notre algorithme \(LDL^t\) a une bonne précision.\newline\indent
 
 On souhaite calculer la complexité de notre algorithme \(LDL^t\).\newline
-Lors du calcule on écrit directement dans la matrice d'entré, on créé aussi un vecteur de taille n, la complexité en mémoire de notre algorithme est donc de \(n^2+n = \mathcal{O}(n^2)\).\newline
-La boucle principale va de \texttt{j = 1:n}, à l'intérieur on a une boucle de \texttt{i = 1:j-1} (qui fait \texttt{2 Read}, \texttt{1 Write}, \texttt{1}\(\times\)), soit un nombre d'opération de l'ordre de \texttt{(j-1)}.\newline
-Puis y a un produit scalaire entre deux vecteur de taille \texttt{(j-1)} qui donne aussi un nombre d'opération de l'ordre de \texttt{(j-1)}. \newline
-Et enfin il y a un produit entre une matrice \texttt{(n-j)}\(\times\)\texttt{(j-1)} et un vecteur \texttt{(j-1)} soit un nombre d'opération de l'ordre de \texttt{(n-j)(j-1)}.\newline
+Lors du calcul on écrit directement dans la matrice d'entrée, on crée aussi un vecteur de taille n, la complexité en mémoire de notre algorithme est donc de \(n^2+n = \mathcal{O}(n^2)\).\newline
+La boucle principale va de \texttt{j = 1:n}, à l'intérieur on a une boucle de \texttt{i = 1:j-1} (qui fait \texttt{2 Read}, \texttt{1 Write}, \texttt{1}\(\times\)), soit un nombre d'opérations de l'ordre de \texttt{(j-1)}.\newline
+Puis y a un produit scalaire entre deux vecteurs de taille \texttt{(j-1)} qui donne aussi un nombre d'opérations de l'ordre de \texttt{(j-1)}. \newline
+Et enfin il y a un produit entre une matrice \texttt{(n-j)}\(\times\)\texttt{(j-1)} et un vecteur \texttt{(j-1)} soit un nombre d'opérations de l'ordre de \texttt{(n-j)(j-1)}.\newline
 En sommant entre \texttt{1} et \texttt{n}, on trouve la complexité en temps de l'algorithme,
 \[
 \sum_{j=1}^n (n-j+2)(j-1) = \mathcal{O}(\frac{n^3}{6}) = \mathcal{O}(n^3)
@@ -239,7 +239,7 @@ On trace la variation du temps d'exécution avec la fonction \texttt{myldlt.sci:
 \centering
 \includegraphics[scale=0.80]{time_LDLt}
 \end{figure}
-Dans un graphique \(\log\log\), les fonctions \(x^k\) apparaissent comme des droites de pente \(k\). Ici la courbe de la moyenne à une pente d'environ \(2\), ce qui est significativement moins que la valeur théorique \(\mathcal{O}(n^3)\). C'est très certainement dû aux optimisations de \texttt{BLAS/LAPACK}, cependant on remarque que la courbe n'est pas tous à fait linéaire, vers les grandes valeur de \(n\) la pente devient supérieur à \(2\).
+Dans un graphique \(\log\log\), les fonctions \(x^k\) apparaissent comme des droites de pente \(k\). Ici la courbe de la moyenne à une pente d'environ \(2\), ce qui est significativement moins que la valeur théorique \(\mathcal{O}(n^3)\). C'est très certainement dû aux optimisations de \texttt{BLAS/LAPACK}, cependant on remarque que la courbe n'est pas tout à fait linéaire, vers les grandes valeurs de \(n\) la pente devient supérieure à \(2\).
 
 On compare \(LDL^t\) et \(LU\) (sans pivot partiel) avec la fonction \texttt{myldlt.sci: comp\_mylu\_myldlt()}\footnote{\texttt{myldlt.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/myldlt.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/myldlt.sci}}
 
@@ -272,7 +272,7 @@ A(k+1:n, k+1:n) = A(k+1:n,k+1:n) - A(k+1:n,k) * A(k,k+1:n)
 // boucle principale LDLt
 A(j+1:n,j) = (A(j+1:n,j) - A(j+1:n,1:j-1) * v(1:j-1))/A(j,j)
 \end{minted}
-On peut expliquer que notre algorithme \(LU\) est plus rapide sur de petites valeurs de \(n\) par sa compacité. Il n'y a qu'une boucle et on utilise presque exclusivement les opérations vectorielles de \texttt{scilab}, le code est fortement optimisé, mais ça ne suffit pas pour battre \(LDL^t\) sur de grandes matrices.
+On peut expliquer que notre algorithme \(LU\) est plus rapide sur de petites valeurs de \(n\) par sa compacité. Il n'y a qu'une boucle et on utilise presque exclusivement les opérations vectorielles de \texttt{scilab}, le code est fortement optimisé, mais ça ne suffit pas pour aller plus vite que \(LDL^t\) sur de grandes matrices.
 
 \section{CSR}
 
@@ -312,12 +312,12 @@ Au format CSR, elle se présente sous cette forme :
 \end{bmatrix}
 \]
 
-\texttt{AA} contient les valeurs, \texttt{JA} le numéro de la colonne de la valeur associer, et \texttt{IA} l'index des sauts de lignes (index des éléments \texttt{AA} et \texttt{JA}). \texttt{IA} commence toujours par 1, lorsqu'une ligne est sauté (ligne de 0) l'index est répété dans \texttt{IA}, par exemple ici : la première ligne est sauté, donc après le premier \(1\) obligatoire, on met un second \(1\).
+\texttt{AA} contient les valeurs, \texttt{JA} le numéro de la colonne de la valeur associée, et \texttt{IA} l'index des sauts de lignes (index des éléments \texttt{AA} et \texttt{JA}). \texttt{IA} commence toujours par 1, lorsqu'une ligne est sautée (ligne remplie 0) l'index est répété dans \texttt{IA}, par exemple ici : la première ligne est sautée, donc après le premier \(1\) obligatoire, on met un second \(1\).
 
-On remarque qu'au format CSR, la taille du vecteur \texttt{IA} est la même que celle du \texttt{nombre de lignes + 1}, le vecteur de sorti du produit \(Ax\) aura donc un nombre d'élément égal à \texttt{length(IA)-1}
+On remarque qu'au format CSR, la taille du vecteur \texttt{IA} est la même que celle du \texttt{nombre de lignes + 1}, le vecteur de sorti du produit \(Ax\) aura donc un nombre d'élément égal à \texttt{length(IA)-1}.
 
-Soit \(x\) un vecteur, on souhaite faire le produit matrice-vecteur \(Ax\), le vecteur x soit avoir le même nombre d'élément que le nombre de colonne de \(A\).
-La boucle principale de l'algorithme de multiplication CSR doit se faire sûr le nombre d'élément non nul de A, à l'intérieur de celle ci on place une boucle while qui incrémentera l'indicateur de la ligne actuelle tant que \texttt{IA} nous dit de sauter de ligne. Le produit scalaire se fait élément par élément, l'élément \texttt{AA(i)} est positionner à la colonne \texttt{JA(i)} donc on sait par quel élément de \(x\) on doit le multiplier \texttt{x(JA(i))}. La complexité de l'algorithme est en \(\mathcal{O}(\texttt{nombre\ éléments\ non\ nul})\).
+Soit \(x\) un vecteur, on souhaite faire le produit matrice-vecteur \(Ax\), le vecteur x soit avoir le même nombre d'éléments que le nombre de colonnes de \(A\).
+La boucle principale de l'algorithme de multiplication CSR doit se faire sûr le nombre d'éléments non nul de A, à l'intérieur de celle ci on place une boucle \texttt{while} qui incrémentera l'indicateur de la ligne actuelle tant que \texttt{IA} nous dit de sauter de ligne. Le produit scalaire se fait élément par élément, l'élément \texttt{AA(i)} est positionné à la colonne \texttt{JA(i)} donc on sait par quel élément de \(x\) on doit le multiplier \texttt{x(JA(i))}. La complexité de l'algorithme est en \(\mathcal{O}(\texttt{nombre\ éléments\ non\ nul})\).
 
 \begin{scriptsize}
 \centering
@@ -341,12 +341,12 @@ endfunction
 
 Pour tester cet algorithme, on a besoin de pouvoir générer des matrices creuses, et calculer leur forme CSR.
 
-Un moyen efficace pour généré des matrices creuse est de remplir une matrice vide de quelques valeurs aléatoires, puis de permuter aléatoirement ses éléments. Pour cela on utilise la fonction \texttt{grand(1, "prm", A)} de \texttt{scilab}, le \texttt{"prm"} signifie qu'on souhaite une permutation, le 1 signifie que l'on en veut qu'une seule, et \texttt{A} est la matrice à permuter. Voir l'implémentation dans \texttt{csr.sci: make\_mat\_creuse}.\footnote{\texttt{csr.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}}
+Un moyen efficace pour générer des matrices creuses est de remplir une matrice vide de quelques valeurs aléatoires, puis de permuter aléatoirement ses éléments. Pour cela on utilise la fonction \texttt{grand(1, "prm", A)} de \texttt{scilab}, le \texttt{"prm"} signifie qu'on souhaite une permutation, le 1 signifie que l'on en veut qu'une seule, et \texttt{A} est la matrice à permuter. Voir l'implémentation dans \texttt{csr.sci: make\_mat\_creuse}.\footnote{\texttt{csr.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}}
 \newline\indent
 
-L'algorithme pour calculer le format CSR est aussi très simple. On parcours \(A\) avec deux boucle fort (selon les lignes), on note les valeurs non nulle dans \texttt{AA}, les colonnes dans \texttt{JA}, et lorsqu'on change de ligne on mets d'indice dans \texttt{IA}. Cependant étant donné qu'on doit parcourir toutes les cases de \(A\), cet algorithme est en \(\mathcal{O}(n^2)\). Voir l'implémentation dans \texttt{csr.sci: make\_csr(A)}.
+L'algorithme pour calculer le format CSR est aussi très simple. On parcourt \(A\) avec deux boucles \texttt{for} (selon les lignes), on note les valeurs non nulles dans \texttt{AA}, les colonnes dans \texttt{JA}, et lorsqu'on change de ligne on met l'indice dans \texttt{IA}. Cependant étant donné qu'on doit parcourir toutes les cases de \(A\), cet algorithme est en \(\mathcal{O}(n^2)\). Voir l'implémentation dans \texttt{csr.sci: make\_csr(A)}.
 
-On peut tester cet algorithme en faisant et défaisant la forme CSR (avec la fonction \texttt{csr.sci: undo\_csr(..)}), puis en prenant la 2-norme de la matrice initiale moins celle qui a été fait puis défait. On trouve que ces matrices sont toujours identique quelque soit la taille de la matrices initiale. Voir l'implémentation dans \texttt{csr.sci: test\_csr()}\footnote{\texttt{csr.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}}
+On peut tester cet algorithme en faisant et défaisant la forme CSR (avec la fonction \texttt{csr.sci: undo\_csr(..)}), puis en prenant la 2-norme de la matrice initiale moins celle qui a été faite puis défaite. On trouve que ces matrices sont toujours identique quelque soit la taille de la matrices initiale. Voir l'implémentation dans \texttt{csr.sci: test\_csr()}\footnote{\texttt{csr.sci} : \href{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}{https://github.com/ggdoe/tp-cn-4-ggdoe/blob/main/csr.sci}}
 \newline\indent
 
 On peut maintenant tester la multiplication matrice creuse vecteur. On génère d'abord une matrice creuse \texttt{n}\(\times\)\texttt{m} avec la fonction \texttt{make\_mat\_creuse}, on génère aussi un vecteur creux \texttt{m}\(\times\)\texttt{1} avec la même fonction. On converti cette matrice en CSR avec \texttt{make\_csr}, puis on récupère le vecteur sortie de \texttt{csr\_mv} que l'on compare avec \(Ax\) (en prenant la 2-norme de la différence). Voir l'implémentation dans \texttt{csr.sci: test\_csr\_mv()}
@@ -376,7 +376,7 @@ On peut comparer les performances de \texttt{csr\_mv} avec \texttt{Ax}. Pour de 
 
 
 
-On remarque que le produit matrice-vecteur natif de \texttt{scilab} est dans tous les cas plus performant, que notre \texttt{csr\_mv}. Notre fonction est interprété par \texttt{scilab} c'est ce qui fait qu'elle est moins performante. Dans un langage compilé comme C, le produit matrice-vecteur CSR serait plus rapide que le produit matrice-vecteur classique.
+On remarque que le produit matrice-vecteur natif de \texttt{scilab} est dans tous les cas plus performant, que notre \texttt{csr\_mv}. Notre fonction est interprétée par \texttt{scilab} c'est ce qui fait qu'elle est moins performante. Dans un langage compilé comme C, le produit matrice-vecteur CSR serait plus rapide que le produit matrice-vecteur classique.
 
 \section{Poisson 1D}
 
@@ -399,7 +399,7 @@ En faisant un développement Taylor, on obtient :
 	\end{array}
 	\right .
 \]
-On additionne ces deux equations pour supprime le terme $T'$, puis on isole $T''$.
+On additionne ces deux equations pour supprimer le terme $T'$, puis on isole $T''$.
 \[
 	\begin{array}{r c l}
 		T(x-h)+T(x+h) & = & 2T(x) + h^2 T''(x) + o(h^3)\\
@@ -435,7 +435,7 @@ On peut donc écrire :
 		-T_{i-1} + 2T_i - T_{i+1} & = & \frac{h^2g(x_i)}{k} & = & \frac{g_i}{k(n+1)^2}\\
 	\end{array}
 \]
-On obtient donc un système d'équation linéaire qu'on peut représenter par une matrice.
+On obtient donc un système d'équations linéaires qu'on peut représenter par une matrice.
 \[
 	u = 
 	\begin{bmatrix}
@@ -461,7 +461,7 @@ On obtient donc un système d'équation linéaire qu'on peut représenter par un
 		g_1 \\ g_2 \\ \vdots \\ g_{n-1} \\ g_n \\
 	\end{pmatrix}
 \]
-Cependant y a des problèmes aux bord, on est censé avoir :
+Cependant il y a des problèmes aux bords, on est censé avoir :
 \[
 	\begin{array}{r c l}
 		-T_0 + 2T_1 - T_2 & = & \frac{g_1}{k(n+1)^2}\\
@@ -503,7 +503,7 @@ Pour trouver notre inconnue $u$, il suffit de résoudre le système \(Au = f\). 
 
 \section{Résolution Poisson 1D méthode directe}
 
-\texttt{BLAS} et \texttt{LAPACK} sont des bibliothèques \texttt{FORTRAN}, leurs interfaces \texttt{C} sont nommées respectivement \texttt{CBLAS} et \texttt{LAPACKE}. Leur \textit{header} sont inclus dans notre \texttt{blaslapack\_headers.h}. \texttt{lib\_poisson1D.c} contient les fonctions qui nous permettrons d'initialiser nos matrices (poisson 1D et identité) et nos vecteurs (discrétisation de l'espace 1D, vecteur \texttt{f}, et solution analytique). Le fichier contient également les fonctions qui permettent d'écrire dans un fichier les différents vecteur et matrices, ainsi que des fonctions qui seront utile pour résoudre le problème par méthode itérative.
+\texttt{BLAS} et \texttt{LAPACK} sont des bibliothèques \texttt{FORTRAN}, leurs interfaces \texttt{C} sont nommées respectivement \texttt{CBLAS} et \texttt{LAPACKE}. Leur \textit{header} sont inclus dans notre \texttt{blaslapack\_headers.h}. \texttt{lib\_poisson1D.c} contient les fonctions qui nous permettrons d'initialiser nos matrices (poisson 1D et identité) et nos vecteurs (discrétisation de l'espace 1D, vecteur \texttt{f}, et solution analytique). Le fichier contient également les fonctions qui permettent d'écrire dans un fichier les différents vecteurs et matrices, ainsi que des fonctions qui seront utiles pour résoudre le problème par méthode itérative.
 
 Le fichier \texttt{tp\_env.c} permet de vérifier que \texttt{BLAS/LAPACK} est correctement installé sur la machine. Elle affiche différentes constantes de \texttt{float.h}, puis effectue une copie d'un tableau de double à l'aide de la fonction \texttt{cblas\_dcopy}.
 
@@ -512,11 +512,11 @@ Le fichier \texttt{tp\_env.c} permet de vérifier que \texttt{BLAS/LAPACK} est c
 void cblas_dcopy(const int N, const double *X, const int incX, double *Y, const int incY);
 \end{minted}
 \end{scriptsize}
-\texttt{N} est le nombre d'élement du tableau X à copier dans Y, \texttt{incX} (resp. \texttt{incY}) est l'incrément qu'on doit ajouter à l'index pour chaque élément (en partant de 0). Par exemple, si on veut copier les éléments \texttt{X[0]}, \texttt{X[3]}, $\cdots$, \texttt{X[3N]} alors \texttt{incX} est égale à $3$.
+\texttt{N} est le nombre d'éléments du tableau X à copier dans Y, \texttt{incX} (resp. \texttt{incY}) est l'incrément qu'on doit ajouter à l'index pour chaque élément (en partant de 0). Par exemple, si on veut copier les éléments \texttt{X[0]}, \texttt{X[3]}, $\cdots$, \texttt{X[3N]} alors \texttt{incX} est égale à $3$.
 
 La résolution par méthode directe utilise la fonction \texttt{dgbsv} de \texttt{LAPACK}, cette fonction résout un système de la forme $Ax = b$ d'inconnue $x$ par factorisation LU (avec \texttt{dgbtrf}) \footnote{dgbsv : \href{http://www.netlib.org/lapack/explore-html/d3/d49/group__double_g_bsolve_gafa35ce1d7865b80563bbed6317050ad7.html}{http://www.netlib.org/lapack/explore-html/[...]0ad7.html}} puis le résout avec \texttt{dgbsv}.
 
-Avant d'appeler cette fonction plusieurs étape sont nécessaires. On déclare nos vecteurs (\texttt{X}, \texttt{RHS}, \texttt{EX\_SOL}) et on alloue la place à l'aide de \texttt{malloc}, nos trois vecteur comportent \texttt{*la} éléments. On discrétise notre espace \texttt{X} (sur \texttt{*la + 2} points) avec la fonction :
+Avant d'appeler cette fonction plusieurs étapes sont nécessaires. On déclare nos vecteurs (\texttt{X}, \texttt{RHS}, \texttt{EX\_SOL}) et on alloue la place à l'aide de \texttt{malloc}, nos trois vecteurs comportent \texttt{*la} éléments. On discrétise notre espace \texttt{X} (sur \texttt{*la + 2} points) avec la fonction :
 \begin{scriptsize}
 \begin{minted}{c}
 void set_grid_points_1D(double* x, int* la);
@@ -527,10 +527,10 @@ Puis on initialise le vecteur \texttt{f} ($Au = f$) ici appelé RHS, avec la fon
 void set_dense_RHS_DBC_1D(double* RHS, int* la, double* BC0, double* BC1);
 \end{minted}
 \end{scriptsize}
-qui remplit de zéro les \texttt{*la} éléments de \texttt{RHS} excepter pour le premier et le dernier élément où elle mets respectivement \texttt{*BC0} et \texttt{*BC1}.
+qui remplit de zéros les \texttt{*la} éléments de \texttt{RHS} excepté pour le premier et le dernier élément où elle met respectivement \texttt{*BC0} et \texttt{*BC1}.
 
-Il ne reste plus qu'à initialiser la matrice $A$, pour appeler \texttt{d\textcolor{red}{gb}sv}, la matrice doit être stocker sous format \textit{band}.
-En stockage \textit{band}, on ne stocke que les diagonales de la matrice. On écrit sous forme de matrice les diagonales de A. On aligne à droite les diagonales supérieurs en laissant vide les premiers éléments (et alignement à gauche pour les diagonales inférieurs).
+Il ne reste plus qu'à initialiser la matrice $A$, pour appeler \texttt{d\textcolor{red}{gb}sv}, la matrice doit être stockée sous format \textit{band}.
+En stockage \textit{band}, on ne stocke que les diagonales de la matrice. On écrit sous forme de matrice les diagonales de A. On aligne à droite les diagonales supérieures en laissant vide les premiers éléments (et alignements à gauche pour les diagonales inférieures).
 \[
 \begin{pmatrix}
 		2	& 	-1	&	0	& 0	\\
@@ -545,8 +545,8 @@ En stockage \textit{band}, on ne stocke que les diagonales de la matrice. On éc
 		-1	& 	-1	&	-1	&	\cdots	&	-1	&	\ast\\
 	\end{pmatrix}
 \]
-D'après la documentation de \texttt{LAPACK}\footnote{Stockage Band LAPACK : \href{https://www.netlib.org/lapack/lug/node124.html}{https://www.netlib.org/lapack/lug/node124.html}}, les éléments $\ast$ n'ont pas besoin d'être initialiser à 0.
-La même page de documentation nous informe que lorsque qu'on effectue une factorisation \texttt{LU}, on a besoin d'allouer \texttt{*kl} diagonales supérieurs additionnelle. Pour poisson 1D, notre matrice possède 1 diagonale inférieur (\texttt{*kl}) et 1 supérieur (\texttt{*ku}). Pour la factorisation \texttt{LU}, il faut donc au total réserver 1 diagonale inférieur, 1 diagonale principale, et 2 diagonales supérieurs.
+D'après la documentation de \texttt{LAPACK}\footnote{Stockage Band LAPACK : \href{https://www.netlib.org/lapack/lug/node124.html}{https://www.netlib.org/lapack/lug/node124.html}}, les éléments $\ast$ n'ont pas besoin d'être initialisés à 0.
+La même page de documentation nous informe que lorsque qu'on effectue une factorisation \texttt{LU}, on a besoin d'allouer \texttt{*kl} diagonales supérieures additionnelles. Pour poisson 1D, notre matrice possède 1 diagonale inférieure (\texttt{*kl}) et 1 supérieure (\texttt{*ku}). Pour la factorisation \texttt{LU}, il faut donc au total réserver 1 diagonale inférieure, 1 diagonale principale, et 2 diagonales supérieures.
 \[ 
 	\Longrightarrow
 	\begin{pmatrix}
@@ -556,16 +556,16 @@ La même page de documentation nous informe que lorsque qu'on effectue une facto
 		-1	& 	-1	&	-1	&	\cdots	&	-1	&	\ast\\
 	\end{pmatrix}
 \]
-D'après la documentation de la \texttt{MKL}\footnote{MKL Matrix Arguments : \href{https://www.smcm.iqfr.csic.es/docs/intel/mkl/mkl_manual/appendices/mkl_appB_MA.htm}{https://www.smcm.iqfr.csic.es/docs/intel/mkl/[...]\_MA.htm}} les éléments \texttt{+} n'ont pas besoin d'être initialiser, et les éléments $\ast$ ne sont pas utiliser par \texttt{dgbsv}. On pourrait donc théoriquement stocker ce qu'on veut à la place des $\ast$, et ces valeurs ne seront pas affectées par \texttt{dgbsv}.
+D'après la documentation de la \texttt{MKL}\footnote{MKL Matrix Arguments : \href{https://www.smcm.iqfr.csic.es/docs/intel/mkl/mkl_manual/appendices/mkl_appB_MA.htm}{https://www.smcm.iqfr.csic.es/docs/intel/mkl/[...]\_MA.htm}} les éléments \texttt{+} n'ont pas besoin d'être initialisés, et les éléments $\ast$ ne sont pas utilisés par \texttt{dgbsv}. On pourrait donc théoriquement stocker ce qu'on veut à la place des $\ast$, et ces valeurs ne seront pas affectées par \texttt{dgbsv}.
 
-Cette matrice sera ensuite stockée dans un tableau 1D, il y a deux méthodes, soit on stocke les éléments en lisant la matrice ligne par ligne (\texttt{Row Major}), soit colonne par colonne (\texttt{Col Major}) (de gauche à droite et de haut en bas).
+Cette matrice sera ensuite stockée dans un tableau 1D. Il y a deux méthodes, soit on stocke les éléments en lisant la matrice ligne par ligne (\texttt{Row Major}), soit colonne par colonne (\texttt{Col Major}) (de gauche à droite et de haut en bas).
 \[ 
 	exemple : \texttt{Col Major} \Longrightarrow
 	\begin{bmatrix}
 	\ast & \ast	& 2 & -1 & \cdots & \texttt{+} & -1 & 2 & \ast
 	\end{bmatrix}
 \]
-On appelle ce tableau \texttt{AB} (\texttt{A band}), on doit alloué \texttt{la(2kl+ku+1)} éléments.
+On appelle ce tableau \texttt{AB} (\texttt{A band}), on doit allouer \texttt{la(2kl+ku+1)} éléments.
 On peut maintenant appeler \texttt{dgbsv}.\footnote{\texttt{tp2\_poisson1D\_direct.c} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/TP_Poisson_C_for_students/src/tp2_poisson1D_direct.c}{https://github.com/ggdoe/tp-cn-5-ggdoe/[...]/src/tp2\_poisson1D\_direct.c}}
 \begin{scriptsize}
 \begin{minted}{c}
@@ -575,15 +575,15 @@ int LAPACKE_dgbsv( int matrix_layout, int n, int kl, int ku, int nrhs,
 \end{scriptsize}
 \begin{itemize}
 \item On doit indiquer le mode de stockage de notre matrice \textit{band} (\texttt{matrix\_layout}) : soit \\ \texttt{LAPACK\_ROW\_MAJOR}, soit \texttt{LAPACK\_COL\_MAJOR}.
-\item \texttt{n}, \texttt{kl} et \texttt{ku} sont la taille de notre matrice et le nombre de diagonale.
-\item \texttt{nrhs} est le nombre de vecteur avec lesquels on veut résoudre le système (avec des \texttt{RHS} différents), ici on n'a qu'un seul \texttt{RHS}.
+\item \texttt{n}, \texttt{kl} et \texttt{ku} sont la taille de notre matrice et le nombre de diagonales.
+\item \texttt{nrhs} est le nombre de vecteurs avec lesquels on veut résoudre le système (avec des \texttt{RHS} différents), ici on n'a qu'un seul \texttt{RHS}.
 \item \texttt{ab} est notre matrice au format \texttt{matrix\_layout}.
-\item \texttt{ldab} est la \texttt{leading dimension} de \texttt{ab}, c'est-à-dire le nombre d'élément  séparant deux lignes consécutive en mémoire pour la même colonne. En \texttt{Row Major} il y a \texttt{la} éléments séparant deux lignes, et en \texttt{Col Major} il y en a $\texttt{2kl+ku+1 = lab}$.
-\item \texttt{ipiv} stocke les index des pivots de la factorisation \texttt{LU}, on doit donc alloué préalablement \texttt{ipiv} avec \texttt{la} éléments. Dans le code on alloue avec \texttt{calloc} qui initialise chaque éléments avec 0.
+\item \texttt{ldab} est la \texttt{leading dimension} de \texttt{ab}, c'est-à-dire le nombre d'éléments  séparant deux lignes consécutives en mémoire pour la même colonne. En \texttt{Row Major} il y a \texttt{la} éléments séparant deux lignes, et en \texttt{Col Major} il y en a $\texttt{2kl+ku+1 = lab}$.
+\item \texttt{ipiv} stocke les index des pivots de la factorisation \texttt{LU}, on doit donc allouer préalablement \texttt{ipiv} avec \texttt{la} éléments. Dans le code on alloue avec \texttt{calloc} qui initialise chaque élément avec 0.
 \item \texttt{b} est notre \texttt{RHS}, et \texttt{ldb} est la \texttt{leading dimension} de b, donc 1 en \texttt{Row Major} et \texttt{la} en \texttt{Col Major}.
 \end{itemize}
 La fonction écrit la solution directement dans \texttt{RHS}.
-Elle retourne 0 pour un succès, sinon elle renvoie un nombre \texttt{<0} en cas d'erreur dans un des arguments d'appel de la fonction, ou \texttt{>0} si la solution n'a pas pu être calculer. On stocke cette valeurs dans \texttt{info} qu'on affiche après l'appel de la fonction.
+Elle retourne 0 pour un succès, sinon elle renvoie un nombre \texttt{<0} en cas d'erreur dans un des arguments d'appel de la fonction, ou \texttt{>0} si la solution n'a pas pu être calculée. On stocke cette valeur dans \texttt{info} qu'on affiche après l'appel de la fonction.
 
 Pour vérifier la solution, on la compare avec la solution analytique. On doit d'abord remettre en ordre la permutation de la factorisation \texttt{LU}, par chance \texttt{ipiv} représente la permutation identité, on peut donc comparer directement \texttt{RHS} et \texttt{EX\_SOL}. On calcule l'erreur commise :
 \[
@@ -621,7 +621,7 @@ Ces fonctions s'utilisent de la même manière que \texttt{cblas\_dcopy} plus ha
 \caption{Temps d'exécution \texttt{dgbsv}}
 \centering
 \includegraphics[scale=0.70]{time_dgbsv}
-\caption*{\textit{Une partie du temps d'exécution sert à réinitialiser \texttt{RHS} car pour une meilleur mesure on répète le calcule mais dgbsv réécrit dans RHS, il faut donc le réinitialiser.}}
+\caption*{\textit{Une partie du temps d'exécution sert à réinitialiser \texttt{RHS} car pour une meilleure mesure on répète le calcul mais dgbsv réécrit dans RHS, il faut donc le réinitialiser.}}
 \end{figure}
 
 \section{dgbmv}
@@ -636,7 +636,7 @@ void cblas_dgbmv(CBLAS_LAYOUT layout,
                  const int incX, const double beta, double *Y, const int incY);
 \end{minted}
 \end{scriptsize}
-La plupart des paramètres de la fonction s'utilise de la même manière que les fonctions utilisées précédemment. \texttt{M} est le nombre de lignes, \texttt{N} le nombre de colonnes. Il ne faut pas oublier que cette fonction n'effectue pas de factorisation \texttt{LU}, lorsqu'on construit la matrice \textit{band} $A$, il ne faut pas rajouter de diagonale supérieur supplémentaire (on a $\texttt{kv} = 0$). Deux \texttt{enum} sont réservé pour indiquer le layout, et le type de transposition de la matrice :
+La plupart des paramètres de la fonction s'utilise de la même manière que les fonctions utilisées précédemment. \texttt{M} est le nombre de lignes, \texttt{N} le nombre de colonnes. Il ne faut pas oublier que cette fonction n'effectue pas de factorisation \texttt{LU}, lorsqu'on construit la matrice \textit{band} $A$, il ne faut pas rajouter de diagonale supérieure supplémentaire (on a $\texttt{kv} = 0$). Deux \texttt{enum} sont réservées pour indiquer le layout, et le type de transposition de la matrice :
 \begin{scriptsize}
 \begin{minted}{c}
 // cblas-netlib.h 
@@ -644,8 +644,8 @@ typedef enum {CblasRowMajor=101, CblasColMajor=102} CBLAS_LAYOUT;
 typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSPOSE;
 \end{minted}
 \end{scriptsize}
-On remarque que \texttt{LAPACKE} et \texttt{CBLAS} utilise la même norme pour indiquer le layout, la seul différence est que \texttt{CBLAS} utilise une enum alors que \texttt{LAPACKE} des \texttt{\#define} (voir \texttt{lapacke.h}). On a trois chois pour choisir le type de transposition : pas de transposition, transposition, ou bien transconjuguée (adjoint) en cas de matrice à coefficient complexe.
-On remarque aussi que \texttt{dgbmv} est de type \texttt{void}, en regardant la doc netlib on voit que la gestion d'erreur se fait à l'intérieur de \texttt{dgbmv} via l'appel de la fonction \texttt{xerbla} qui print la variable locale \texttt{info} puis stoppe l'exécution du programme en cas d'erreur.
+On remarque que \texttt{LAPACKE} et \texttt{CBLAS} utilisent la même norme pour indiquer le layout, la seule différence est que \texttt{CBLAS} utilise une enum alors que \texttt{LAPACKE} des \texttt{\#define} (voir \texttt{lapacke.h}). On a trois choix de type de transposition : pas de transposition, transposition, ou bien transconjuguée (adjoint) en cas de matrice à coefficient complexe.
+On remarque aussi que \texttt{dgbmv} est de type \texttt{void}, en regardant la documentation netlib on voit que la gestion d'erreur se fait à l'intérieur de \texttt{dgbmv} via l'appel de la fonction \texttt{xerbla} qui print la variable locale \texttt{info} puis stoppe l'exécution du programme en cas d'erreur.
 
 Dans notre cas, on fera appel à \texttt{dgbmv}\footnote{\texttt{tp2\_dgbmv.c} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/TP_Poisson_C_for_students/src/tp2_dgbmv.c}{https://github.com/ggdoe/tp-cn-5-ggdoe/[...]/src/tp2\_dgbmv.c}} pour calculer \(Ax\), où $A$ notre matrice \textit{band}, et $x$ notre vecteur solution analytique. Le résultat doit donc être \(Ax = f\) où $f$ est notre vecteur \texttt{RHS}. On doit donc mettre $\alpha = 1$ et $\beta = 0$. Notre matrice est carrée ($\texttt{la} \times \texttt{la}$), on a $\texttt{inX} = \texttt{incY} = 1$. Quant à la \texttt{leading dimension}, en \texttt{Col Major} : $\texttt{lda} = \texttt{kl} + \texttt{ku} + 1$. En \texttt{Row Major}, \texttt{lda} devrait être égale à la taille de la diagonale principale (\texttt{la}) mais ça ne fonctionne pas dû à un bug (on trouve une erreur relative $\approx 5.04$ pour $\texttt{la}=100$).
 \begin{scriptsize}
@@ -682,7 +682,7 @@ On vérifie le résultat de la même manière que pour \texttt{dgbsv}, en mesura
 
 \section{LU pour Poisson 1D}
 
-D'après \texttt{scilab}, la factorisation $LU$ d'une matrice de Poisson 1D s'exprime simplement. $L$ et $U$ sont des matrices bidiagonale (respectivement \textit{lower} et \textit{upper}) où la diagonale principale de $L$ ne comporte que des 1, et la diagonale supérieur de $U$ ne comporte que des $-1$.
+D'après \texttt{scilab}, la factorisation $LU$ d'une matrice de Poisson 1D s'exprime simplement. $L$ et $U$ sont des matrices bidiagonales (respectivement \textit{lower} et \textit{upper}) où la diagonale principale de $L$ ne comporte que des 1, et la diagonale supérieur de $U$ ne comporte que des $-1$.
 \[
 	A = 
 	\begin{pmatrix}
@@ -751,7 +751,7 @@ En identifiant avec $A$, on obtient le système suivant :
 	\end{array}
 	\right .
 \]
-On implémente cet algorithme dans \texttt{lib\_poisson1D.c}\footnote{\texttt{tp2\_poisson1D\_lu.c} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/TP_Poisson_C_for_students/src/tp2_poisson1D_lu.c}{https://github.com/ggdoe/tp-cn-5-ggdoe/[...]/src/tp2\_poisson1D\_lu.c}} en stockage \textit{band} dans la fonction \texttt{myluB\_colMajor\_poisson1D}. Il n'existe pas de fonction \texttt{dgbmm} dans \texttt{BLAS 3}, pour vérifier que notre résultat est bon, on effectue 2 produits matrice-vecteur \(L(Ux)\), où x est la solution exacte, puis on compare le résultat à \(f = \left[T_0\ 0\ 0\ \cdots 0\ T_1\right]\) (en norme-2).
+On implémente cet algorithme dans \texttt{lib\_poisson1D.c}\footnote{\texttt{tp2\_poisson1D\_lu.c} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/TP_Poisson_C_for_students/src/tp2_poisson1D_lu.c}{https://github.com/ggdoe/tp-cn-5-ggdoe/[...]/src/tp2\_poisson1D\_lu.c}} en stockage \textit{band} dans la fonction \\\texttt{myluB\_colMajor\_poisson1D}. Il n'existe pas de fonction \texttt{dgbmm} dans \texttt{BLAS 3}, pour vérifier que notre résultat est bon, on effectue 2 produits matrice-vecteur \(L(Ux)\), où x est la solution exacte, puis on compare le résultat à \(f = \left[T_0\ 0\ 0\ \cdots 0\ T_1\right]\) (en norme-2).
 On fait donc deux \texttt{dgbmv} avec $\beta = 0$, la \texttt{leading dimension} dans les deux cas est $2$. Entre les deux \texttt{dgbmv} on échange \texttt{EX\_SOL} et \texttt{y} pour obtenir le résultat final dans y.
 \begin{scriptsize}
 \begin{minted}{c}
@@ -762,13 +762,13 @@ On fait donc deux \texttt{dgbmv} avec $\beta = 0$, la \texttt{leading dimension}
 \end{scriptsize}
 Puis on compare \texttt{y} et \texttt{RHS} ($f$) en norme-2 avec un \texttt{daxpy} et deux \texttt{ddot}.
 
-On peut aussi implémenter cette algorithme en stockage dense puis vérifier le résultat avec une norme matricielle. Pour calculer la norme de $A$ on peut utiliser la fonction \texttt{dlange} de \texttt{LAPACK}, mais puisque $A$ est symétrique on peut tout aussi bien utiliser \texttt{dlansy} pour profiter de la symétrie de $A$.
+On peut aussi implémenter cet algorithme en stockage dense puis vérifier le résultat avec une norme matricielle. Pour calculer la norme de $A$ on peut utiliser la fonction \texttt{dlange} de \texttt{LAPACK}, mais puisque $A$ est symétrique on peut tout aussi bien utiliser \texttt{dlansy} pour profiter de la symétrie de $A$.
 \begin{scriptsize}
 \begin{minted}{c}
 double LAPACKE_dlansy( int matrix_layout, char norm, char uplo, lapack_int n, const double* a, lapack_int lda );
 \end{minted}
 \end{scriptsize}
-Les matrices $A$, $L$ et $U$ sont écrites en \texttt{Row Major}. Comme norme on choisi par exemple la norme de Frobenius 'F'. Vu que $A$ contient tous les éléments des deux côtés de la diagonale, on peut choisir $\texttt{uplo} = 'U' ou 'L'$ indifféremment. \texttt{n} et \texttt{lda} sont tous deux égale à \texttt{lda} car $A$ est carré.
+Les matrices $A$, $L$ et $U$ sont écrites en \texttt{Row Major}. On peut choisir comme norme par exemple celle de Frobenius \texttt{'F'}. Vu que $A$ contient tous les éléments des deux côtés de la diagonale, on peut choisir $\texttt{uplo} = $'U' ou 'L' indifféremment. \texttt{n} et \texttt{lda} sont tous deux égales à \texttt{lda} car $A$ est carré.
 
 Pour calculer $LU-A$, on utilise \texttt{dgemm} de \texttt{BLAS 3}.
 \begin{scriptsize}
@@ -780,7 +780,7 @@ void cblas_dgemm(CBLAS_LAYOUT layout, CBLAS_TRANSPOSE TransA,
                  const double beta, double *C, const int ldc);
 \end{minted}
 \end{scriptsize}
-$A$ est symétrique donc le \texttt{layout} importe peu, mais la factorisation $LU$ dans \texttt{mylu\_rowMajor\_poisson1D} est implémenté en \texttt{Row Major}. Aucune des matrice n'est transposé. \texttt{M}, \texttt{N}, \texttt{K}, et les \texttt{leading dimension} sont toutes égales à \texttt{la} car ce sont des matrices carrées.  
+$A$ est symétrique donc le \texttt{layout} importe peu, mais la factorisation $LU$ dans \texttt{mylu\_rowMajor\_poisson1D} est implémentée en \texttt{Row Major}. Aucune des matrices n'est transposée. \texttt{M}, \texttt{N}, \texttt{K}, et les \texttt{leading dimension} sont toutes égales à \texttt{la} car ce sont des matrices carrées.  
 Pour calculer \( \lVert LU-A \rVert \) on utilise \texttt{dlange} de façon très similaire à \texttt{dlansy}.
 \begin{scriptsize}
 \begin{minted}{c}
@@ -811,13 +811,38 @@ relres = LAPACKE_dlange(LAPACK_ROW_MAJOR, 'F', la, la, A, la);
 \caption*{\textit{Pour de grand n, le temps de vérification de $LU$ \textit{dense} devient très long dû aux \texttt{dlan**} et \texttt{dgemm}.}}
 \end{figure}
 Les fonctions initialisent $2n$ éléments pour chaque matrice $L$ et $U$, la complexité théorique des algorithmes est donc en \(\mathcal{O}(4n)\).
-On remarque que le temps de construction de $LU$ dense explose alors que les deux algorithmes initialise le même nombre d'élément. On peut expliquer la différence par la proximité en mémoire des éléments non nuls du format \textit{band} par rapport au format \textit{dense} : une plus grande partie des éléments à initialiser du tableau \textit{band} rentre en mémoire cache.
+On remarque que le temps de construction de $LU$ dense explose alors que les deux algorithmes initialisent le même nombre d'éléments. On peut expliquer la différence par la proximité en mémoire des éléments non nuls du format \textit{band} par rapport au format \textit{dense} : une plus grande partie des éléments à initialiser du tableau \textit{band} rentre en mémoire cache.
 
 \section{Jacobi et Gauss-Seidel \texttt{Scilab}}
-
+L'itération de Jacobi s'écrit sous la forme de Richardson :
+\[
+	x^{k+1} = x^k + D^{-1}(b-Ax^k)
+\]
+Pour le problème de Poisson 1D, $D = 2I_d$.
+L'itération de Gauss-Seidel (Forward) s'écrit :
+\[
+	(D-E)x^{k+1} = Fx^k + b
+\]
+On peut faire une itération de Gauss-Seidel en résolvant ce système. Dans les notations de \texttt{scilab}, $D-E = \texttt{tril(A)}$ et $F = \texttt{tril(A)-A}$, une itération s'écrit donc :
+\begin{minted}{scilab}
+x = tril(A)\((tril(A)-A)*x + b)
+\end{minted}
+On implémente ces algorithmes dans \texttt{scilab}\footnote{\texttt{jacobi-seidel.sci} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/jacobi-seidel.sci}{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/jacobi-seidel.sci}}. Ces algorithmes ont une complexité en \(\mathcal{O}(n^2)\).
+\begin{figure}[H]
+\caption{Erreur - Jacobi et Gauss-Seidel pour n = 200}
+\centering
+\includegraphics[scale=0.70]{conv_jac_seid_n200}
+\end{figure}
+\begin{figure}[H]
+\caption{Mesure de temps - Jacobi et Gauss-Seidel (\texttt{loglog})}
+\centering
+\includegraphics[scale=0.70]{time_jac_seid_loglog}
+\caption*{\textit{On mesure le temps d'exécution jusqu'à arriver à une erreur de $\epsilon = 0.05$, $n_{max} = 400$}}
+\end{figure}
+Bien que Gauss-Seidel demande plus de calculs par itération, la précision supplémentaire apportée lui permet d'être plus rapide que Jacobi. Cependant au bout d'un certain rang n Gauss-Seidel devient plus lent que Jacobi. L'implémentation en est sûrement là cause, l'opérateur \texttt{\textbackslash} de \texttt{scilab} devient très lent pour de grandes valeurs de $n$. La complexité de Gauss-Seidel est légèrement plus grande que Jacobi. On retrouve une complexité proche de \(\mathcal{O}(n^2)\) pour les deux algorithmes. 
 
 \section{Richardson \texttt{Scilab}}
-L'itération de Richardson s'écrit : 
+Soit l'itération de Richardson : 
 \[
 	\begin{array}{r c l r}
 		x^{k+1} & = & x^k + \alpha(b-Ax^k) & \quad avec\ \alpha > 0
@@ -906,21 +931,40 @@ Le $\alpha$ optimal minimise tous les $\left| 1 - \alpha \lambda \right|$. On tr
 \centering
 \includegraphics[scale=0.70]{alpha_opt}
 \end{figure}
-$\alpha_{opt}$ est à l'intersection des courbes après qu'une ai été reflété. On a donc :
+$\alpha_{opt}$ est à l'intersection des courbes après qu'une ai été réfléchie. On a donc :
 \[
 	1 - \alpha_{opt} \lambda_{min} = \alpha_{opt} \lambda_{max} - 1
 \]
 \[
 	\alpha_{opt} = \frac{2}{\lambda_{min} + \lambda_{max}}
 \]
-Pour trouver les valeurs propre de on utilise la fonction \texttt{spec} de \texttt{scilab}. On trouve que quelque soit la taille de $A$, $\lambda_{min} + \lambda_{max} = 4$, on a donc $\alpha_{opt} = \frac{1}{2}$.
-On implémente l'algorithme en \texttt{scilab}\footnote{\texttt{richardson.sci} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/richardson.sci}{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/richardson.sci}} puis on trace les courbes d'erreurs (par rapport à la solution analytique) en fonction de $\alpha$ :
+D'après le cours, les valeurs propres d'une matrices de T\oe{}plitz s'écrivent :
+\[
+\lambda_k=b+2\sqrt{ac}\ sign(c)\cos(\frac{k\pi}{n+1}) \quad , \quad k \in \left[ 1, n \right]
+\]
+Pour une matrice de poisson $a=c=-1$ et $b=2$, on a donc :
+\[
+	\lambda_{min} = 2 - 2\cos(\frac{1\pi}{n+1}) \qquad \lambda_{max} = 2 - 2\cos(\frac{n\pi}{n+1})
+\]
+On voit très facilement géométriquement que :
+\[
+	\cos(\frac{1\pi}{n+1}) + \cos(\frac{n\pi}{n+1}) = 0
+\]
+
+On a donc :
+\[ 
+	\begin{array}{r c l}
+		\lambda_{min} + \lambda_{max} & = & 4 \\
+	\alpha_{opt} & = & \frac{1}{2} \\
+	\end{array}
+\]
+On retrouve le processus de Jacobi. On peut aussi utiliser la fonction \texttt{spec} de \texttt{scilab} pour trouver le spectre de $A$.
+On implémente l'algorithme en \texttt{scilab}\footnote{\texttt{richardson.sci} : \href{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/richardson.sci}{https://github.com/ggdoe/tp-cn-5-ggdoe/blob/master/richardson.sci}} puis on trace les courbes d'erreur (par rapport à la solution analytique) en fonction de $\alpha$ :
 \begin{figure}[H]
 \caption{Erreur Richardson pour n = 100}
 \centering
 \includegraphics[scale=0.70]{conv_richardson_n100}
 \end{figure}
 On retrouve que pour un $\alpha$ très légèrement supérieur à $\alpha_{opt}$, le processus de Richardson diverge.
-
 
 \end{document}
